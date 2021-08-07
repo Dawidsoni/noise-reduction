@@ -1,0 +1,197 @@
+\documentclass[a4paper, 11pt, onecolumn, openany, titlepage]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{filecontents}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{breakcites}
+\usepackage{graphicx}
+\graphicspath{{qualitative-results/}{quantitative-results/}}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{afterpage}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage[rightcaption]{sidecap}
+\usepackage[usenames, dvipsnames]{xcolor}
+\usepackage[nottoc]{tocbibind}
+
+\geometry{a4paper, headsep=1.0cm, footskip=1cm, lmargin=3cm, rmargin=3cm, tmargin=3cm, bmargin=3cm}
+\hypersetup{colorlinks, citecolor=NavyBlue, filecolor=NavyBlue, linkcolor=NavyBlue, urlcolor=NavyBlue}
+
+\titleformat{\chapter}[block]{\normalfont\huge\bfseries}{\thechapter.}{5pt}{\huge}
+\titlespacing*{\chapter}{0pt}{-19pt}{25pt}
+\titleformat{\section}[block]{\normalfont\Large\bfseries}{\thesection.}{5pt}{\Large}
+
+\newcommand\blankpage{\null\thispagestyle{empty}\newpage}
+\newcommand\numberedchapter[1]{\setlength\topskip{3cm}\chapter{#1}\setlength\topskip{0cm}}
+\newcommand\unnumberedchapter[1]{\setlength\topskip{3cm}\chapter*{#1}\setlength\topskip{0cm}}
+
+\begin{document}
+\setlength\topskip{3cm}
+\newpage
+\thispagestyle{empty}
+\begin{center}
+\textbf{\large Uniwersytet Wrocławski\\
+Wydział Matematyki i Informatyki\\
+Instytut Matematyczny}\\
+\vspace{4cm}
+\textbf{\textit{\large Dawid Wegner}\\
+\vspace{0.5cm}
+{\Large Efektywne odszumianie obrazów przy użyciu algorytmu Metropolis-Hastings}}\\
+\end{center}
+\vspace{3cm}
+{\large \hspace*{6.5cm}Praca licencjacka\\
+\hspace*{6.5cm}napisana pod kierunkiem\\
+\hspace*{6.5cm}dr hab. Pawła Lorka}\\
+\vfill
+\begin{center}
+{\large Wrocław 2021}\\
+\end{center}
+\setlength\topskip{0cm}
+\afterpage{\blankpage}
+
+{\hypersetup{linkcolor=black}
+\setlength\topskip{3cm}
+\tableofcontents
+\setlength\topskip{0cm}
+}
+
+\unnumberedchapter{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+TODO
+
+
+\numberedchapter{Markov Chains}
+
+TODO
+
+\numberedchapter{Markov chain Monte Carlo methods}
+
+TODO
+
+\section{Gibbs sampling}
+
+TODO
+
+\section{Metropolis–Hastings algorithm}
+
+TODO
+
+\numberedchapter{Ising model and its applications}
+
+TODO
+
+\section{Formal definition of the Ising model}
+
+TODO
+
+\section{Application to binary image denoising problem}
+
+TODO
+
+\section{Extension to grayscale images}
+
+TODO
+
+\section{Applying MCMC methods to the Ising model}
+
+TODO
+
+\numberedchapter{Gradient-based image denoising}
+
+TODO
+
+\section{Proposal distribution inspired by gradients}
+
+TODO
+
+\section{Efficient implementation for image denoising problem}
+
+TODO
+
+\numberedchapter{Experiments: binary images}
+
+TODO
+
+\section{Methodology}
+
+TODO
+
+\section{Denoising quality based on image size}
+
+TODO
+
+\section{Denoising quality based on noise level}
+
+TODO
+
+\section{Sensitivity of noise level prior parameter}
+
+TODO
+
+\section{Qualitative results}
+
+TODO
+
+\numberedchapter{Experiments: grayscale images}
+
+TODO
+
+\section{Methodology}
+
+TODO
+
+\section{Denoising quality}
+
+TODO
+
+\section{Qualitative results}
+
+TODO
+
+\numberedchapter{Summary}
+
+TODO
+
+Podstawowym problemem, z jakim zmagają się wszyscy przedsiębiorcy, jest przygotowa- nie oferty w ten sposób, by była ona zarówno atrakcyjna dla klienta (a przynajmniej bardziej atrakcyjna niż to, co oferuje konkurencja), jak i przynosiła zyski dla przedsiębiorcy (a już na pewno nie generowała strat). Branża ubezpieczeniowa nie jest tu wyjątkiem. Każda ubez- pieczalnia zatrudnia sztab aktuariuszy, których zadaniem jest wyznaczenie obowiązkowych składek w ten.
+Computers \cite{einstein} sdsd.
+Podstawowym problemem, z jakim zmagają się wszyscy przedsiębiorcy, jest przygotowa- nie oferty w ten sposób, by była ona zarówno atrakcyjna dla klienta (a przynajmniej bardziej atrakcyjna niż to, co oferuje konkurencja), jak i przynosiła zyski dla przedsiębiorcy (a już na pewno nie generowała strat). Branża ubezpieczeniowa nie jest tu wyjątkiem. Każda ubez- pieczalnia zatrudnia sztab aktuariuszy, których zadaniem jest wyznaczenie obowiązkowych składek w ten sposób, by pokryły koszta działalności firmy oraz przyszłe zobowiązania wzglę- dem klientów. W przypadku ubezpieczeń majątkowych zadanie jest o tyle trudniejsze, że bardzo istotny jest tak zwany czynnik ludzki czyli np. skłonność do ryzyka lub umiejętność prowadzenia pojazdów. Są to parametry trudne do zmierzenia, stąd potrzeba jak najlepsze- go modelowania wpływu tych składowych na wartość zgłaszanych szkód, na skutek których konieczna będzie wypłata odszkodowania. Obecnie najczęściej stosowaną metodą jest sys- tem Bonus - Malus, którego głównym założeniem jest związanie wysokości składki z liczbą wypadków spowodowanych przez kierowcę. Wadą tego rozwiązania jest nieuwzględnianie istot- nych czynników takich jak np. częstotliwość prowadzenia pojazdu czy styl jazdy. Pomysłem na rozwiązanie tego problemu jest montowanie w samochodach urządzeń rejestrujących jaz- dę, jednak może się to spotkać z oporem klientów dbających o ochronę swojej prywatności. Powstaje więc pytanie jak poprawić stosowane rozwiązania bez konieczności zbierania dodat- kowych danych o kierowcy. Odpowiedzią na to pytanie mogą być tak zwane ukryte modele Markowa.
+Figure \ref{fig:xxx} compared with Figure \ref{fig:yyy} sss \cite{einstein} sdsd.
+
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{input_size_plots}
+\caption{Example of a parametric plot ($\sin (x), \cos(x), x$)}
+\label{fig:xxx}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{input_size_plots}
+\caption{Example of a parametric plot ($\sin (x), \cos(x), x$)}
+\label{fig:yyy}
+\end{figure}
+
+\begin{thebibliography}{9}
+\bibitem{latexcompanion}
+Michel Goossens, Frank Mittelbach, and Alexander Samarin.
+\textit{The \LaTeX\ Companion}.
+Addison-Wesley, Reading, Massachusetts, 1993.
+
+\bibitem{einstein}
+Albert Einstein.
+\textit{Zur Elektrodynamik bewegter K{\"o}rper}. (German)
+[\textit{On the electrodynamics of moving bodies}].
+Annalen der Physik, 322(10):891–921, 1905.
+
+\bibitem{knuthwebsite}
+Knuth: Computers and Typesetting,
+\\\texttt{http://www-cs-faculty.stanford.edu/\~{}uno/abcde.html}
+\end{thebibliography}
+
+
+\end{document}
