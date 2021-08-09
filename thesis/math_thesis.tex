@@ -26,6 +26,7 @@
 \usepackage{algpseudocode}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{bbm}
 
 \geometry{a4paper, headsep=1.0cm, footskip=1cm, lmargin=3cm, rmargin=3cm, tmargin=3cm, bmargin=3cm}
 \hypersetup{colorlinks, citecolor=NavyBlue, filecolor=NavyBlue, linkcolor=NavyBlue, urlcolor=NavyBlue}
@@ -199,7 +200,7 @@ for any $i, j$ it holds $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$.\ What is 
 $\tilde{\pi}$, it follows that $\pi = \tilde{\pi}$ i.e.\ the probability measure that we found is a stationary
 distribution.\ This gives us a powerful tool for finding a stationary distribution.
 
-\numberedchapter{Markov Chain Monte Carlo methods}
+\numberedchapter{Markov Chain Monte Carlo methods}\label{chapter:mcmc}
 
 Consider a problem of sampling a random permutation from the set of $100$ elements.\ One can show that such space
 contains $100!$ elements, implying that putting all permutations in the memory of a computer is not feasible.\ While
@@ -269,7 +270,7 @@ algorithm, while in the general case of non-symmetric $Q$ it is called the $Metr
 \end{algorithmic}
 \end{algorithm}
 
-\section{Gibbs sampling}
+\section{Gibbs sampling}\label{section:gibbs_sampling}
 
 In this section we will show how to simulate Markov Chains for some specific distributions.\ Specifically, let us assume
 that each possible state in a given state space can be represented by a function $e_i : V \to S$ that maps each vertex
@@ -321,23 +322,136 @@ in the following chapters.
 
 \numberedchapter{Ising model and its applications}
 
-TODO
+In the present chapter we will describe a model that is used by physicists to describe phase transitions.\ While
+it may seem unrelated to the topic of image denoising, it turns out out that the described model can operate on
+any graph.\ In particular, we will show how to interpret images as graphs and apply the Ising model to the problems
+of binary and grayscale image denoising.
 
 \section{Formal definition of the Ising model}
 
-TODO
+In this section we will follow the notions introduced in the $Section$ \ref{section:gibbs_sampling}.\ Let us consider
+a graph $G = (V,\ K)$ and a set $S = \{-1,\ 1\}$.\ Now, define a configuration $e_i : V \to S$ as a function that
+maps vertices of $G$ to elements from $S$ and a potential function
+$$
+H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
+$$
 
-\section{Application to binary image denoising problem}
-
-TODO
-
-\section{Extension to grayscale images}
-
-TODO
+where $\beta$ is a parameter that controls the strength of $coupling$ between vertices.\ The described model is called
+the $Ising$ model.\ In physics, the elements $\{-1, \, 1\}$ of the set $S$ are interpreted as a negative and positive
+spin respectively.\ Assuming that $\beta > 0$, the model assigns the high probability to configurations having the
+same spins assigned for neighbouring vertices.\ Note that the Ising model is uniquely determined for a given graph
+$G$ and a parameter $\beta$.
 
 \section{Applying MCMC methods to the Ising model}
 
-TODO
+Let us assume that we are given the Ising model and our task is to produce samples with probabilities proportional to
+the given potential function $H$ i.e.
+$$
+\pi(e_i) = \frac{H(e_i)}{Z}
+$$
+where $Z$ is the normalising constant.\ One way of approaching this problem is to utilise MCMC methods described in
+the $Chapter$ \ref{chapter:mcmc}.\newline
+
+As we already described how to construct configurations for our model, the first algorithm that comes to mind is
+the Gibbs sampler introduced in the $Section$ \ref{section:gibbs_sampling}.\ Actually, it suffices to derive a formula
+for the conditional probability $P(e_{\tilde{v}} = s | e_{-\tilde{v}} = e_i)$ for any $\tilde{v} \in V$ and
+$s \in \{-1,\ 1\}$.\ By expanding and simplifying this expression, we get
+$$
+P(e_{\tilde{v}} = -1 | e_{-\tilde{v}} = e_i) =
+\frac{\pi_{e_{\tilde{v}} = -1,e_{-\tilde{v}} = e_i}}
+{\pi_{e_{\tilde{v}} = -1,e_{-\tilde{v}} = e_i} + \pi_{e_{\tilde{v}} = 1,e_{-\tilde{v}} = e_i}} =
+\frac{1}{1 + 2 \sum\limits_{(\tilde{v}, \tilde{w}) \in K} e_i(\tilde{w})}
+$$
+and utilising the fact that $|S| = 2$
+$$
+P(e_{\tilde{v}} = 1 | e_{-\tilde{v}} = e_i) = 1 - P(e_{\tilde{v}} = -1 | e_{-\tilde{v}} = e_i)
+$$
+
+As it was just shown, the problem of updating the spin of a vertex $\tilde{v}$ was reduced to evaluating a simple
+formula.\ Furthermore, this formula can be calculated efficiently in the time complexity $\mathcal{O}(1)$ as it is
+possible to store and update the information about the sum of neighbours' spins for each $v \in V$.\newline
+
+It is easy to convince yourself that Metropolis-Hastings can also be applied to the Ising model.\ To do so, one needs
+to come up with the proposal distribution $Q$ and be able to calculate the expression
+$\min{(1, \frac{\pi_j Q_{ji}}{\pi_i Q_{ij}})}$ for each $i, j \in E$.\ If we define the neighbourhood of configurations
+similarly as it is defined in the Gibbs sampler, the considered expression will simplify considerably. \ The
+advantage of this approach is that we can construct $Q$ in a way that the simulated chain will converge faster.\newline
+
+The final question is why do we care about sampling from the Ising model?\ To answer this question, one may observe
+that some configurations are assigned much higher probability than the others.\ It means that when the simulated
+Markov Chain will converge to its stationary distribution, it will start producing samples with a very high potential
+defined by the function $H$.\ Actually, the most common application of the Ising model is to find those configurations
+that have a high probability while rejecting the others.\ In particular, the problem of maximizing the potential
+function, if we add additional constraints, is not trivial.
+
+\section{Application to binary image denoising problem}\label{section:binary_images_problem}
+
+Consider a problem in which we are given a binary image with some pixels flipped.\ Formally, let denote a coordinate
+$(i, j)$ of our observation by $Z_{ij} \in \{0, 255\}$.\ The goal is to find an original image $X$ such that
+$X_{ij} \in \{0, 255\}$, leveraging the fact that $Z$ was constructed by following the formula
+$$
+Z_{ij} =
+\begin{cases}
+  255 - X_{ij} &\text{if $U \sim Unif(0, 1) < \alpha$}\\
+  X_{ij} &\text{otherwise}
+\end{cases}
+$$
+
+As we are interested in images representing real objects, we can safely assume that most of the neighbouring pixels
+should have the same value.\ Combining it with the fact that $Z$ was generated by flipping each pixel of $X$ with some
+unknown probability $\alpha$, we can construct a model that finds $X$ providing the best balance between the
+two above-mentioned constraints.\newline
+
+Specifically, let as think of images as graphs in which the neighbourhood for a
+vertex representing a coordinate $(i, j)$ is defined as $\{(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)\}$.\ In
+order to have it properly defined for pixels in the corners on an image, one may add margins.\ Now, define
+$S = \{-1, 1\}$ and map our pixels by applying the following function
+$$
+\tilde{Z}_{ij} =
+\begin{cases}
+  -1 &\text{if $Z_{ij} = 0$}\\
+  1 &\text{if $Z_{ij} = 255$}
+\end{cases}
+$$
+
+The described model is the Ising model that assures that neighbouring pixels have the same values.\ In order to
+take into account the second constraint, one may increase the potential of configurations that have their pixel values
+equal to the observed values defined by $Z$.\ Putting it all together, we get the following potential function:
+$$
+H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
+\prod\limits_{j \in V} \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
+\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha
+$$
+
+where $\alpha, \beta$ are the parameters controlling the observation strength and the coupling strength respectively.
+Intuitively, increasing the observation strength causes our model to put more weight to the observed pixels in $Z$,
+while increasing the coupling strength enforces the neighbouring pixels to have the same values.
+
+\section{Extension to grayscale images}
+
+In the present section we show how to extend the model described in the $Section$ \ref{section:binary_images_problem}
+to grayscale images.\ Formally, given an observation $Z$ such that $Z_{ij} \in \{0, 1, \dots, 255\}$ the goal is to
+find an original image $X$.\ In this paper, we assume that $Z$ was generated by flipping random pixels of $X$ i.e.
+$$
+Z_{ij} =
+\begin{cases}
+  255 - X_{ij} &\text{if $U \sim Unif(0, 1) < \alpha$}\\
+  X_{ij} &\text{otherwise}
+\end{cases}
+$$
+and leave more general case for the future work.\ Similarly to the case of binary images, our optimization goal is to
+maximise the potential function that takes into account the observation $Z$ and the coupling between neighbouring
+pixels.\ While there are many ways to define such potential function $H$, we find that the following function
+$$
+H(e_i) = \prod\limits_{(j, k) \in K} e^{-\beta |e_i(v_j) - e_i(v_k)|}
+\prod\limits_{j \in V} \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
+\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha
+$$
+expresses our constraints in efficient and intuitive way.\ In particular, the penalty given by the coupling part of
+the function $H$ is proportional to the sum of distances between a considered pixel and all its neighbours.\ As a
+result, the model is encouraged to flip those pixels that are significantly different from all of its
+neighbours.\ The other observation is that $H$ is defined in a way that most of its components are equal for the
+neighbouring configurations, making the update rule of the Gibbs algorithm simple and efficient.
 
 \numberedchapter{Gradient-based image denoising}
 
