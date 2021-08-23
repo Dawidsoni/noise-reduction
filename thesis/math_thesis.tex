@@ -55,6 +55,8 @@
 \theoremstyle{default_theorem_style}\newtheorem{theorem}{Theorem}
 \theoremstyle{default_theorem_style}\newtheorem{definition}{Definition}
 
+\DeclareMathOperator*{\argmax}{arg\,max}
+
 \begin{document}
 \setlength\topskip{3cm}
 \newpage
@@ -66,12 +68,12 @@ Instytut Matematyczny}\\
 \vspace{4cm}
 \textbf{\textit{\large Dawid Wegner}\\
 \vspace{0.5cm}
-{\Large Efektywne odszumianie obrazów przy użyciu algorytmu Metropolis-Hastings}}\\
+{\Large Gradient-based Metropolis-Hastings algorithm with applications to image denoising}}\\
 \end{center}
 \vspace{3cm}
 {\large \hspace*{6.5cm}Praca licencjacka\\
 \hspace*{6.5cm}napisana pod kierunkiem\\
-\hspace*{6.5cm}dr hab. Pawła Lorka}\\
+\hspace*{6.5cm}dra hab. Pawła Lorka}\\
 \vfill
 \begin{center}
 {\large Wrocław 2021}\\
@@ -94,8 +96,8 @@ retrieval as the noise is present in many practical situations e.g.\ on photos t
 cannot be removed using simple heuristics.\ While many sophisticated approaches have been already proposed to solve
 the stated problem, it remains an open area of research.\newline
 
-In this paper we tackle the problem of denoising binary images by reformulating it to the problem of drawing samples
-from a distribution.\ In order to solve the problem posed in this way, we incorporate Markov Chain Monte Carlo
+In this thesis we tackle the problem of denoising binary images by reformulating it to the problem of drawing samples
+from a distribution.\ In order to solve the problem posed in this way, we incorporate Markov chain Monte Carlo
 methods.\ Furthermore, we present the downsides of the classical Gibbs sampling method and develop gradient-based
 approach, showing that it can be thought of the Metropolis-Hastings algorithm with the custom proposal
 distribution.\ Finally, we provide an algorithm to perform one iteration of our gradient-based approach in the
@@ -103,107 +105,107 @@ time complexity $\mathcal{O}(1)$ and extend it to the case where some pixels of 
 flipped.\ Our theoretical studies are supported by various experiments, proving that our method is able to
 reconstruct original images and in particular is superior to the Gibbs sampling method.
 
-\numberedchapter{Markov Chains}
+\numberedchapter{Markov chains}
 
-In this chapter we will formally define the notion of Markov Chain and list its basic properties.\ Particularly,
-we will characterise a stationary distribution and reversible Markov Chains.\ These tools are necessary to understand
-the theory behind Markov Chain Monte Carlo methods that are discussed in \textit{Chapter} \ref{chapter:mcmc}.
+In this chapter we will formally define the notion of Markov chain and list its basic properties.\ Particularly,
+we will characterise a stationary distribution and reversible Markov chains.\ These tools are necessary to understand
+the theory behind Markov chain Monte Carlo methods that are discussed in \textit{Chapter} \ref{chapter:mcmc}.
 
 \section{Basic properties}
 
-Formally, a Markov Chain is a stochastic process in which the probability of the next event depends only on the current
-state.\ Intuitively, we can think of such process as a directed graph with loops.\ An example of a Markov Chain that
+Formally, a Markov chain is a stochastic process in which the probability of the next event depends only on the current
+state.\ Intuitively, we can think of such process as a directed graph with loops.\ An example of a Markov chain that
 describes weather conditions is shown in Figure \ref{fig:markov_chain}.\ In this case, our state space contains three
-elements: $\{Sun,\ Cloudy,\ Rain\}$.\ Each directed edge represents the probability of transitioning from a state
-$X_{n}$ to a state $X_{n + 1}$.\ In the example presented in Figure \ref{fig:markov_chain}, the probability that the
-weather will be \textit{rainy} in the day $X_{n + 1}$, conditioned on the fact that it was \textit{cloudy} in the
-day $X_n$, is equal to $0.5$.\ Note that the described process carries an underlying assumption that the weather in
+elements: $\{Sunny,\ Cloudy,\ Rainy\}$.\ Each directed edge represents the probability of transitioning from a state
+$X_k$ to a state $X_{k + 1}$.\ In the example presented in Figure \ref{fig:markov_chain}, the probability that the
+weather will be \textit{rainy} in the day $X_{k + 1}$, conditioned on the fact that it was \textit{cloudy} in the
+day $X_k$, is equal to $0.5$.\ Note that the described process carries an underlying assumption that the weather in
 the next day depends only on the weather in the present day.
 
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.4]{markov_chain}
-\caption{An example of a Markov Chain describing weather conditions.}
+\caption{An example of a Markov chain describing weather conditions.}
 \label{fig:markov_chain}
 \end{figure}
 
-While a graph representation of a Markov Chain is useful, in most cases it's convenient to think of it as a matrix.
-Formally, let us define an element $0 \leq P_{ij} \leq 1$ of a matrix $P$ as the probability of
-transitioning from the state $i$ to the state $j$.\ As the $i$-th row of such matrix defines probabilities of
-transitioning from the $i$-th  state to all other states, the equality $\sum_{j = 1}^{n} P_{ij} = 1$ holds.\ A
-matrix with the above-mentioned properties is called a \textit{stochastic} matrix.\ In the next sections, we will think
-of a Markov Chain in this way.
+Although a Markov chain can contain infinitely many states, we only consider
+the ones with a finite number of states.\ In particular, some theorems presented in the next sections
+are not true without this assumption.\ The graph representation of a Markov chain is useful, but in most cases
+it's convenient to think of it as a matrix.\ Formally, let us define an element $0 \leq P_{ij} \leq 1$ of a matrix
+$P$ as the probability of transitioning from the state $i$ to the state $j$.\ As the $i$-th row of such matrix
+defines probabilities of transitioning from the $i$-th  state to all other states, the equality
+$\sum_{j = 1}^{n} P_{ij} = 1$ holds.\ A matrix with the above-mentioned properties is called a
+\textit{stochastic} matrix.\ In the next sections, we will think of a Markov chain in this way.
 
 \begin{definition}
 A vector $\mu^{(0)} = (\mu^{(0)}_1, \mu^{(0)}_2, \dots, \mu^{(0)}_n)$ such that $\sum_{i=1}^{n} \mu^{(0)}_i = 1$
-is called an \textit{initial state} of a Markov Chain.\ It defines an initial distribution across the state space.
+is called an \textit{initial distribution} of a Markov chain.\ It defines an initial distribution across the state space.
 
 \end{definition}
 
-The Markov Chain process is fully characterized by its transition matrix $P$ and an initial state $\mu^{(0)}$.\ In
-particular, the distribution of a Markov Chain in the $k$-th step can be uniquely determined i.e.\ the equality
-$\mu^{(k)} = \mu^{(0)}P^k$ holds.\ Although a Markov Chain can contain infinitely many states, we only consider
-the ones with a finite number of states.\ In particular, some theorems presented in the next sections
-are not true without this assumption.\newline
+The Markov chain process is fully characterized by its transition matrix $P$ and an initial distribution $\mu^{(0)}$.\ In
+particular, the distribution of a Markov chain in the $k$-th step can be uniquely determined i.e.\ the equality
+$\mu^{(k)} = \mu^{(0)}P^k$ holds.\newline
 
 \section{Stationary distribution}
 
 In this section we will formalize the notion of stationary distribution and explore its properties.\ Furthermore,
-we will provide sufficient conditions to guarantee that a Markov Chain has a unique stationary distribution.
+we will provide sufficient conditions to guarantee that a Markov chain has a unique stationary distribution.
 
 \begin{definition}
-A vector $\pi = (\pi_1, \pi_2, \dots, \pi_n)$ is called a \textit{stationary} distribution if and only if $\pi P = \pi$,
-where $P$ denotes a transition matrix of a Markov Chain.
+A probability distribution $\pi = (\pi_1, \pi_2, \dots, \pi_n)$ is called a \textit{stationary} distribution if and only if
+$\pi P = \pi$, where $P$ denotes a transition matrix of a Markov chain.
 \end{definition}
 
-One can convince yourself that a Markov Chain can have multiple stationary distributions.\ An example of such Markov
+One can convince yourself that a Markov chain can have multiple stationary distributions.\ An example of such Markov
 Chain is when $P = Id$, which implies that any probability distribution is stationary.\ In the remaining part of this
-section we will characterise a family of Markov Chains with a unique stationary distribution.
+section we will characterise a family of Markov chains with a unique stationary distribution.
 
 \begin{definition}
-A Markov Chain with a transition matrix $P$ is called \textit{irreducible} if and only if for each pair of the source
+A Markov chain with a transition matrix $P$ is called \textit{irreducible} if and only if for each pair of the source
 state $i$ and the destination state $j$, it's possible to transition from $i$ to $j$ in a finite time i.e.\ there
 exists $k$ such that $(P^k)_{ij} > 0$.
 \end{definition}
 
 \begin{definition}
 A period of the $i$-th state is defined as $p(i) = gcd(\{n \geq 1 : (P^n)_{ii} > 0\}$.\ A state is called
-\textit{aperiodic} if $p(i) = 1$.\ A Markov Chain is called aperiodic if all of its states are aperiodic.
+\textit{aperiodic} if $p(i) = 1$.\ A Markov chain is called aperiodic if all of its states are aperiodic.
 \end{definition}
 
-A Markov Chain that respects the two above-mentioned properties is called an \textit{ergodic} Markov
-Chain.\ Interestingly, ergodic Markov Chains have many useful properties that leads to sophisticated algorithms.
+A Markov chain that respects the two above-mentioned properties is called an \textit{ergodic} Markov
+Chain.\ Interestingly, ergodic Markov chains have many useful properties that leads to sophisticated algorithms.
 
 \begin{theorem}\label{thm:one_stationary}
-For any ergodic Markov Chain, there exists exactly one stationary distribution $\pi$.
+For any ergodic Markov chain, there exists exactly one stationary distribution $\pi$.
 \end{theorem}
 
 \begin{theorem}\label{thm:converges_to_stationary}
-Let $\mu^{(0)}$ be an arbitrary initial state of any ergodic Markov Chain.\ Let
+Let $\mu^{(0)}$ be an arbitrary initial distribution of any ergodic Markov chain.\ Let
 $d_{TV}(\mu^{(n)}, \pi) = \frac{1}{2} \sum_{i = 1}^{k} |\mu_i^{(n)} - \pi_i|$ denote a distance between a
-distribution of possible states in the $n$-th step and a stationary distribution of the defined Markov Chain.\ Then,
+distribution of possible states in the $n$-th step and a stationary distribution of the defined Markov chain.\ Then,
 the equality $\lim_{n \to \infty} d_{TV}(\mu^{(n)}, \pi) = 0$ holds.
 \end{theorem}
 
 The proofs of \textit{Theorem} \ref{thm:one_stationary} and \textit{Theorem} \ref{thm:converges_to_stationary} can
 be found in \cite{markov_chains_book}.\ From the practical point of view, the presented theorems imply that an
-ergodic Markov Chain always converges to its stationary distribution, regardless of the initial
+ergodic Markov chain always converges to its stationary distribution, regardless of the initial
 distribution.\ Note that the presented theorems do not guarantee any convergence speed.
 
-\section{Reversible Markov Chains}
+\section{Reversible Markov chains}
 
-Reversible Markov Chains show up in many different areas e.g.\ they are the main building block for the Markov
+Reversible Markov chains show up in many different areas e.g.\ they are the main building block for the Markov
 Chain Monte Carlo methods.\ Formally, the reversed process is defined as $\tilde{X_t} = X_{T - t}$.\ Intuitively,
 $\tilde{X}$ represents a Markov chain that is reversed in a time.
 
 \begin{definition}
-A probability distribution $\tilde{\pi}$ is said to be \textit{reversible} for a Markov Chain with a transition
-matrix $P$ if and only if for any $i,j$ it holds $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$.\ A Markov Chain
+A probability distribution $\tilde{\pi}$ is said to be \textit{reversible} for a Markov chain with a transition
+matrix $P$ if and only if for any $i,j$ it holds $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$.\ A Markov chain
 is called a $reversible$ chain iff $\tilde{X_t} = X_t$ i.e. the reversed process is the same as the forward process.
 \end{definition}
 
 \begin{theorem}\label{reversible_chain}
-A Markov Chain with a stationary distribution $\pi$ is reversible if and only if for any $i, j$ the equality
+A Markov chain with a stationary distribution $\pi$ is reversible if and only if for any $i, j$ the equality
 $\pi_i P_{ij} = \pi_j P_{ji}$ holds.
 \end{theorem}
 
@@ -213,34 +215,37 @@ for any $i, j$ the equality $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$ holds.
 $\tilde{\pi}$, it follows that $\pi = \tilde{\pi}$ i.e.\ the probability measure that we found is a stationary
 distribution.\ As a result, this equation gives us a powerful tool for finding a stationary distribution.
 
-\numberedchapter{Markov Chain Monte Carlo methods}\label{chapter:mcmc}
+\numberedchapter{Markov chain Monte Carlo methods}\label{chapter:mcmc}
 
 Consider a problem of sampling a random permutation from the set of $100$ elements.\ One can show that such space
 contains $100!$ elements, implying that putting all permutations in the memory of a computer is not feasible.\ While
 there exist algorithms for sampling permutations from a uniform distribution, the problem becomes harder in the case of
 a skewed distribution.\ For instance, let our target distribution be defined based on positions of permutation's
-elements e.g.\ $d(x) = \prod_{i = 1}^{n} e^{i \cdot x_i}$, where $x_i$ denotes the $i$-th element of the
-permutation.\ While the problem of sampling from such distribution can not be tackled using any trivial algorithm,
-it's possible to simulate the sampling process with Markov Chains.\newline
+elements e.g.
+$$
+d(x) = \frac{\prod_{i = 1}^{n} e^{i \cdot x_i}}{Z}
+$$
+where $x_i$ denotes the $i$-th element of the permutation and $Z$ is the normalising constant.\ While the problem
+of sampling from such distribution can not be tackled using any trivial algorithm, it's possible to simulate the
+sampling process with Markov chains.\newline
 
 In this chapter, we will show how to deal with a situation in which we have a large state space and our task is to
 sample an element from this space effectively.\ We will leverage the theory presented in the previous section to
-show how to construct a Markov Chain with a stationary distribution equal to the target distribution we want to
+show how to construct a Markov chain with a stationary distribution equal to the target distribution we want to
 sample from.
 
 \section{Metropolis–Hastings algorithm}
 
 Let us denote the target distribution we want to sample from as $\tilde{\pi}$.\ Notice that in order to produce samples
-from $\tilde{\pi}$ one may construct a Markov Chain $X$ with a transition matrix $P$ and a stationary distribution
+from $\tilde{\pi}$ one may construct a Markov chain $X$ with a transition matrix $P$ and a stationary distribution
 $\pi = \tilde{\pi}$.\ As a result, it suffices to simulate $X$ until we reach the stationary distribution.\ Assuming
-that $X$ is ergodic, it can start in any initial state and based on \textit{Theorem} \ref{thm:converges_to_stationary}
+that $X$ is ergodic, it can start in any initial distribution and based on \textit{Theorem} \ref{thm:converges_to_stationary}
 it is guaranteed to converge to $\pi$.\ As one of our assumptions says that the space of states is very large,
-constructing such Markov Chain explicitly does not solve our problem.\ Nevertheless, we can simulate such Markov Chain
-with the Metropolis-Hastings algorithm.\newline
+constructing such Markov chain explicitly does not solve our problem.\newline
 
 Before presenting the full algorithm, we will show how to construct a matrix $P$ such that $\tilde{\pi}$ is a
-stationary distribution of a Markov Chain $X$ corresponding to $P$.\ Let us assume that we have some proposal
-distribution $Q$ that defines a transition matrix of a Markov Chain with the same state space as $X$.\ Going further,
+stationary distribution of a Markov chain $X$ corresponding to $P$.\ Let us assume that we have some proposal
+distribution $Q$ that defines a transition matrix of a Markov chain with the same state space as $X$.\ Going further,
 let us define a matrix $P$:\newline
 $$
 P_{ij} =
@@ -259,10 +264,10 @@ $$
 $$
 which proves that $\pi_i P_{ij} = \pi_j P_{ji}$.\ The case when $\frac{\pi_j Q_{ji}}{\pi_i Q_{ij}} \geq 1$ is
 symmetric.\ Using \textit{Theorem} \ref{reversible_chain}, we can conclude that $\pi$ is the stationary distribution
-of the constructed Markov Chain.\newline
+of the constructed Markov chain.\newline
 
 Equipped with the method for generating a transition matrix $P$ for a given stationary distribution $\pi$, one may
-construct an algorithm \ref{alg:metropolis_hastings} simulating a Markov Chain that corresponds to $P$.\ In case the
+construct an algorithm \ref{alg:metropolis_hastings} simulating a Markov chain that corresponds to $P$.\ In case the
 proposal distribution $Q$ is symmetric (i.e.\ $Q_{ij} = Q_{ji}$), the presented algorithm is called the
 \textit{Metropolis} algorithm, while in the general case of non-symmetric $Q$ it is called the
 \textit{Metropolis-Hastings} algorithm.\newline
@@ -272,22 +277,22 @@ proposal distribution $Q$ is symmetric (i.e.\ $Q_{ij} = Q_{ji}$), the presented 
 \caption{Metropolis-Hastings}\label{alg:metropolis_hastings}
 \begin{algorithmic}[1]
 \State{\textbf{Input:} proposal distribution $Q$}
-\State{\textbf{Input:} the current state $X_n = i$, where $n$ denotes the latest step of the simulation}
+\State{\textbf{Input:} the current state $X_k = i$, where $k$ denotes the latest step of the simulation}
 \State{Sample $j$ from a distribution $Q_i = (Q_{i1}, Q_{i2}, \dots, Q_{iN})$}
 \State{Let $p = \min{(1, \frac{\pi_j Q_{ji}}{\pi_i Q_{ij}})}$}
 \State{Sample $U \sim Unif(0, 1)$}
 \If{$U \leq p$}
-    \State{Set $X_{n + 1}$ = j}
+    \State{Set $X_{k + 1}$ = j}
 \Else
-    \State{Set $X_{n + 1} = X_n$}
+    \State{Set $X_{k + 1} = X_k$}
 \EndIf
-\State{\textbf{Output:} the next state $X_{n + 1}$}
+\State{\textbf{Output:} the next state $X_{k + 1}$}
 \end{algorithmic}
 \end{algorithm}
 
 \section{Gibbs sampling}\label{section:gibbs_sampling}
 
-In this section we will show how to simulate Markov Chains for some specific distributions.\ Specifically, let us assume
+In this section we will show how to simulate Markov chains for some specific distributions.\ Specifically, let us assume
 that each possible state in a given state space can be represented by a function $e_i : V \to S$ that maps each vertex
 $v \in V$ of an underlying graph $G = (V, K)$ to one of possible values $s \in S$.\ Generally, a state that is
 represented in this form is often called a \textit{configuration}.\ While for some distributions this
@@ -327,7 +332,7 @@ Q_{ij} =
 \end{cases}
 $$
 
-which provides an instant proof of the the fact that the presented algorithm simulates a Markov Chain with the
+which provides an instant proof of the the fact that the presented algorithm simulates a Markov chain with the
 stationary distribution $\pi$.\ An alternative proof of this fact can be found in \cite{mcmc_book}.\ The advantage of
 the $Gibbs$ algorithm over the $Metropolis$-$Hastings$ algorithm is that it avoids constructing  the proposal
 distribution $Q$.\ At the same time, for some cases the lack of control over $Q$ is a major downside as we will see
@@ -393,7 +398,7 @@ advantage of this approach is that we can construct $Q$ in a way that the simula
 
 The final question is why do we care about sampling from the Ising model?\ To answer this question, one may observe
 that some configurations are assigned much higher probability than the others.\ It means that when the simulated
-Markov Chain will converge to its stationary distribution, it will start producing samples that have very high
+Markov chain will converge to its stationary distribution, it will start producing samples that have very high
 potential according to the function $H$.\ Actually, the most common application of the Ising model is to find
 those configurations that have a high probability while rejecting the others.\ In particular, if we add
 additional constraints, the problem of maximising the potential function is not trivial.
@@ -433,8 +438,8 @@ take into account the second constraint, one may increase the potential of confi
 equal to the observed values defined by $Z$.\ Putting it all together, we get the following potential function:
 $$
 H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
-\prod\limits_{j \in V} \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
-\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha
+\prod\limits_{j \in V}(\mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
+\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha)
 $$
 
 where $1 - \alpha, \beta$ are the parameters controlling the observation strength and the coupling strength
@@ -460,8 +465,8 @@ maximise the potential function that takes into account the observation $Z$ and 
 pixels.\ While there are many ways to define such potential function $H$, we find that the following function
 $$
 H(e_i) = \prod\limits_{(j, k) \in K} e^{-\beta |e_i(v_j) - e_i(v_k)|}
-\prod\limits_{j \in V} \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
-\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha
+\prod\limits_{j \in V}(\mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
+\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha)
 $$
 expresses our constraints in efficient and intuitive way.\ In particular, the penalty given by the coupling part of
 the function $H$ is proportional to the sum of distances between a considered pixel and all its neighbours.\ As a
@@ -485,7 +490,7 @@ step of the presented algorithm in the time complexity $\mathcal{O}(1)$.
 
 In \textit{Chapter} \ref{chapter:ising_model} we have shown how to sample high-potential configurations by
 utilising MCMC methods.\ While this approach effectively approximates the stationary distribution of the constructed
-Markov Chain, our final goal is to find $\bar{x} = argmax_x H(x)$.\ In the case of continuous functions, such problem
+Markov chain, our final goal is to find $\bar{x} = \argmax_x H(x)$.\ In the case of continuous functions, such problem
 is often tackled by computing a gradient of a given function $f(x)$ with respect to the vector $x$ and taking a small
 step in the direction given by the gradient i.e.\ $x' = x + \gamma \nabla f(x)$, where $\gamma$ is a parameter
 controlling the size of the step.\ The method is repeated many times until it converges to the local/global optima of
@@ -495,7 +500,8 @@ In our scenario, $x$ represents an image in a discrete space, preventing us from
 rule directly.\ But we can still leverage information contained in the gradient as it indicates the direction that
 should be followed.\ A toy example illustrating this intuition is shown in $Figure$ \ref{fig:gradient_example}.\ We
 propose to utilise the gradient information by constructing the probability distribution over neighbours of the current
-state $x$, based on its gradient.\ Specifically, let us sample a dimension $D$ following the distribution
+state $x$, based on its gradient.\ Specifically, let us sample a dimension (aka pixel number) $D$ following the
+distribution
 $$
 P(\tilde{X} = i) = \frac{e^{|(\nabla f(x))_i|}}{\sum\limits_{j = 1}^{n} e^{|(\nabla f(x))_j|}} =
 softmax(|\nabla f(x)|)
@@ -521,15 +527,15 @@ Now, we will show how to derive the update rule for the image denoising problem.
 for our problem is defined by the potential function
 $$
 H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
-\prod\limits_{j \in V} \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
-\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha
+\prod\limits_{j \in V}( \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
+\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha)
 $$
 which may be transformed to the more general form
 $$
 H(x) = e^{x^T W x} = e^{\tilde{H}(x)}
 $$
 where $W$ is $n \times n$ matrix encoding the observation and coupling components of the potential function.\ In
-this formulation, the goal is to find $argmax_x \tilde{H}(x) = x^T W x$.\ Taking the gradient of
+this formulation, the goal is to find $\argmax_x \tilde{H}(x) = x^T W x$.\ Taking the gradient of
 $\tilde{H}(x)$ with respect to $x$, we get
 $$
 (\nabla \tilde{H}(x))_i = (2W x)_i = \sum_{i, j} W_{ij} x_j
@@ -597,16 +603,16 @@ of elements on each list in $P$}
 \caption{Updating a potential in $Q_x$}\label{alg:updating_q}
 \begin{algorithmic}[1]
 \State{\textbf{Input:} A dictionary $P$ mapping potentials to pixels that have a custom potential}
-\State{\textbf{Input:} A dictionary $D$ mapping pixels to their potentials and positions on lists in $P$}
+\State{\textbf{Input:} A dictionary $M$ mapping pixels to their potentials and positions on lists in $P$}
 \State{\textbf{Input:} The position $p$ of a pixel and its new potential $v$}
-\If{$p \in D$}
-  \State{Find a list $L$ and a position of $p$ in $L$ by fetching this information from $D$}
+\If{$p \in M$}
+  \State{Find a list $L$ and a position of $p$ in $L$ by fetching this information from $M$}
   \State{Swap element $p$ from $L$ with the last element $e$}
   \State{Pop the last element from the list $L$}
-  \State{Update the information about the position of $e$ contained in $D$}
+  \State{Update the information about the position of $e$ contained in $M$}
 \EndIf
 \State{Update $P$ by adding $p$ to the end of the list $\tilde{L}$ corresponding to $v$}
-\State{Update $D$ by providing $v$ and the position of $p$ in $\tilde{L}$}
+\State{Update $M$ by providing $v$ and the position of $p$ in $\tilde{L}$}
 \end{algorithmic}
 \end{algorithm}
 
@@ -654,7 +660,7 @@ As part of our analysis, we have plotted the rate of convergence depending on th
 results of the experiment are shown in \textit{Figure} \ref{fig:binary_input_size_plots}.\ In
 both cases of $300{\times}300$ and $1000{\times}1000$ images, the noise level was set to $\tilde{\alpha} = 0.1$
 and the observation strength was set to $1 - \alpha = 1 - \tilde{\alpha}$.\ As it is shown in the plots,
-the gradient-based method converges to an original image within an optimal number of steps.\ In contrast,
+the gradient-based method converges to an original image within one hundred thousand steps.\ In contrast,
 the Gibbs sampling method needs millions of iterations in order to converge to an original image.
 
 \section{Denoising quality based on noise level}
@@ -771,7 +777,7 @@ $\tilde{\alpha} = 0.1$ and $\tilde{\alpha} = 0.2$ while comparing it with the Gi
 the observation strength $\alpha = \tilde{\alpha}$, however we observed that both optimization methods are not
 sensitive to the value of this parameter and provide good estimations when $\alpha \neq \tilde{\alpha}$.\ The
 results of our experiment are shown in \textit{Figure} \ref{fig:grayscale_noise_level_plots}.\ The first outcome
-is that our method converges to an original image in an optimal number of steps, fixing some corrupted pixel in each
+is that our method converges to an original image in two hundred thousand steps, fixing some corrupted pixel in each
 iteration.\ Furthermore, the errors are close $0.0$, meaning that the estimations of our method are near
 perfect.\ Lastly, the Gibbs sampling method also converges to an original image, but it needs several million
 iterations to provide a good estimation.
@@ -808,8 +814,8 @@ side were generated with the noise level $\tilde{\alpha} = 0.2$.}
 
 \numberedchapter{Summary}
 
-Markov Chains are applicable to many real-world problems.\ In this paper, we have shown how a seemingly unrelated
-problem of image denoising can be rephrased in a way that allows us to apply the discussed Markov Chain Monte Carlo
+Markov chains are applicable to many real-world problems.\ In this paper, we have shown how a seemingly unrelated
+problem of image denoising can be rephrased in a way that allows us to apply the discussed Markov chain Monte Carlo
 methods.\ We have also identified the main downside of the classical Gibbs sampling method in the context of the
 application to the considered problem, enabling us to develop more efficient approach.\ The presented
 gradient-based approach was designed to optimize pixels making up the best candidates.\ During our experiments we have
@@ -834,7 +840,7 @@ algorithm can be applied to other problems than the image denoising problem.
 O. Häggström - \textit{Finite Markov chains and algorithmic applications (2002)}
 
 \bibitem{mcmc_book}
-P. Bremaud - \textit{Markov Chains: Gibbs Fields, Monte Carlo Simulation, and Queues (1999)}
+P. Bremaud - \textit{Markov chains: Gibbs Fields, Monte Carlo Simulation, and Queues (1999)}
 
 \bibitem{oops_gradient}
 W. Grathwohl, K. Swersky, M. Hashemi, D. Duvenaud, C. Maddison -
