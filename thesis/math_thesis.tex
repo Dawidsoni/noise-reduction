@@ -98,7 +98,7 @@ state.\ Intuitively, we can think of such process as a directed graph with loops
 describes weather conditions is shown in Figure \ref{fig:markov_chain}.\ In this case, our state space contains three
 elements: $\{Sunny,\ Cloudy,\ Rainy\}$.\ Each directed edge represents the probability of transitioning from a state
 $X_k$ to a state $X_{k + 1}$.\ In the example presented in Figure \ref{fig:markov_chain}, the probability that the
-weather will be \textit{rainy} in the day $X_{k + 1}$, conditioned on the fact that it was \textit{cloudy} in the
+weather will be \textit{rainy} on the day $X_{k + 1}$, conditioned on the fact that it was \textit{cloudy} on the
 day $X_k$, is equal to $0.5$.\ Note that the described process carries an underlying assumption that the weather in
 the next day depends only on the weather in the present day.\newline
 
@@ -110,7 +110,7 @@ the next day depends only on the weather in the present day.\newline
 \end{figure}
 
 \noindent Although a Markov chain can contain infinitely many states, we only consider
-the ones with a finite number of states.\ In particular, some theorems presented in the next sections
+the ones with a finite number of them.\ In particular, some theorems presented in the next sections
 are not true without this assumption.\ The graph representation of a Markov chain is useful, but in most cases
 it's convenient to think of it as a matrix.\ Formally, let us define an element $0 \leq P_{ij} \leq 1$ of a matrix
 $P$ as the probability of transitioning from the state $i$ to the state $j$.\ As the $i$-th row of such matrix
@@ -174,21 +174,29 @@ the initial distribution.\ Note that the presented theorems do not guarantee any
 \section{Reversible Markov chains}
 
 Reversible Markov chains show up in many different areas e.g.\ they are the main building block for the Markov
-Chain Monte Carlo methods.\ Formally, the reversed process is defined as $\tilde{X_t} = X_{T - t}$.\ Intuitively,
-$\tilde{X}$ represents a Markov chain that is reversed in a time.
+Chain Monte Carlo methods.\ They are called this way as they look the same regardless of whether time runs
+backwards or forwards.
 
 \begin{definition}
 A probability distribution $\tilde{\pi}$ is said to be \textit{reversible} for a Markov chain with a transition
-matrix $P$ if and only if for any $i,j$ it holds $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$.\ A Markov chain
-is called a $reversible$ chain iff $\tilde{X_t} = X_t$ i.e. the reversed process is the same as the forward process.
+matrix $P$ if and only if for any $i,j$ it holds $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$.\ A Markov chain is called
+reversible if there exists a reversible distribution $\tilde{\pi}$ for it.
 \end{definition}
 
 \begin{theorem}\label{reversible_chain}
-A Markov chain with a stationary distribution $\pi$ is reversible if and only if for any $i, j$ the equality
-$\pi_i P_{ij} = \pi_j P_{ji}$ holds.
+If a Markov chain is reversible with the distribution $\tilde{\pi}$, then $\tilde{\pi}$ is a stationary distribution
+i.e.\ $\tilde{\pi} = \pi$.
 \end{theorem}
 
-\noindent \textit{Theorem} \ref{reversible_chain} has many useful implications.\ First of all, in order to determine
+\begin{proof}
+Using the fact that each row of $P$ sums to $1.0$, we have
+$$
+(\tilde{\pi} P)_j = \sum\limits_i \tilde{\pi}_i P_{ij} = \sum\limits_i \tilde{\pi}_j P_{ji} =
+\tilde{\pi}_j \sum\limits_i P_{ji} = \tilde{\pi}_j
+$$
+\end{proof}
+
+\noindent The presented theory has many useful implications.\ First of all, in order to determine
 whether a distribution is reversible, it suffices to check if it exists a probability measure $\tilde{\pi}$ such that
 for any $i, j$ the equality $\tilde{\pi_i} P_{ij} = \tilde{\pi_j} P_{ji}$ holds.\ What is more, in case we find such
 $\tilde{\pi}$, it follows that $\pi = \tilde{\pi}$ i.e.\ the probability measure that we found is a stationary
@@ -198,7 +206,7 @@ distribution.\ As a result, this equation gives us a powerful tool for finding a
 
 Consider a problem of sampling a random permutation from the set of $100$ elements.\ One can show that such space
 contains $100!$ elements, implying that putting all permutations in the memory of a computer is not feasible.\ While
-there exist algorithms for sampling permutations from a uniform distribution, the problem becomes harder in the case of
+there exists algorithms for sampling permutations from a uniform distribution, the problem becomes harder in the case of
 a skewed distribution.\ For instance, let our target distribution be defined based on positions of permutation's
 elements e.g.
 $$
@@ -284,19 +292,18 @@ unnormalised probability to each configuration $e \in E$ i.e.\
 $$
 \pi(e) = \frac{H(e)}{Z}
 $$
-where $Z$ is the normalising constant. \ Our goal is to sample configurations with probabilities proportional
-to the function $H$.\ Let us show how to simulate a Markov chain satisfying this condition.\ To
+where $Z$ is the normalising constant.\ Our goal is to sample configurations with probabilities given by $\pi$.\ Let
+us show how to simulate a Markov chain satisfying this condition.\ To
 perform the $(k + 1)$-th step of the algorithm, assuming that the current state is equal to
 $X_k = e_i$, first draw a vertex $\tilde{v} \in V$ uniformly and for each $s \in S$ calculate the probability
 $$
 P(J(\tilde{v}) = s\ |\ J(-\tilde{v})=e_i(-\tilde{v})) = \frac{\pi_{e(\tilde{v}) =
 s,e(-\tilde{v}) = e_i(-\tilde{v})}}{\sum_{s' \in S} \pi_{e(\tilde{v}) = s', e(-\tilde{v}) = e_i(-\tilde{v})}}
 $$
-
 where $J \sim \pi$ is a random variable, $e(\tilde{v})$ refers to $s \in S$ assigned to the vertex $\tilde{v} \in V$ and
 $e(-\tilde{v})$ denotes assignments of $s \in S$ to vertices $v \in V \setminus \{\tilde{v}\}$.\ The last step of
 the algorithm involves sampling $\tilde{s} \in S$ from the probability distribution
-$P(e_{\tilde{v}} = s | e_{-\tilde{v}} = e_i)$ and setting
+$P(J(\tilde{v}) = s\ |\ J(-\tilde{v})=e_i(-\tilde{v}))$ and setting
 $$
 X_{k + 1}(v) =
 \begin{cases}
@@ -323,7 +330,7 @@ in the following chapters.
 
 \numberedchapter{Ising model and its applications}\label{chapter:ising_model}
 
-\noindent In the present chapter we will describe the \textit{Ising model} that is used by physicists to describe phase
+\noindent In the present chapter we will discuss the \textit{Ising model} that is used by physicists to describe phase
 transitions.\ While it may seem unrelated to the topic of image denoising, it turns out that the described model
 can operate on any graph.\ In particular, we will show how to interpret images as graphs and apply the Ising model to
 the problems of binary and grayscale image denoising.
@@ -338,7 +345,7 @@ H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
 $$
 
 \noindent where $\beta$ is a parameter that controls the strength of $coupling$ between vertices.\ The described model
-is called the $Ising$ model.\ In physics, the elements $\{-1, \, 1\}$ of the set $S$ are interpreted as a negative and
+is called the $Ising$ model.\ In physics, the elements $\{-1, \, 1\}$ of the set $S$ are interpreted as a negative and a
 positive \textit{spin} respectively.\ Assuming that $\beta > 0$, the model assigns high probabilities to configurations
 having the same spins assigned for neighbouring vertices.\ Note that the Ising model is uniquely determined for
 a given graph $G$ and a parameter $\beta$.
@@ -400,7 +407,7 @@ $$
   X_{ij} &\text{otherwise}
 \end{cases}
 $$
-where $U_{ij}$ is an i.i.d.\ sequence of $Unif(0, 1)$ random variables.
+where $U_{ij}$ is an i.i.d.\ sequence of $Unif(0, 1)$ random variables.\newline
 
 \noindent As we are interested in images representing real objects, we can safely assume that most of the neighbouring
 pixels should have the same value.\ Combining it with the fact that $\tilde{Z}$ was generated by flipping pixels of
@@ -409,8 +416,11 @@ two above-mentioned constraints.\newline
 
 \noindent Now, let us think of images as graphs in which the neighbourhood of a vertex representing a
 coordinate $(i, j)$ is defined as $\{(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)\}$.\ In
-order to have it properly defined for pixels in the corners on an image, one may add margins.\ Now, define
-$S = \{-1, 1\}$ and map our pixels by applying the following function
+order to have it properly defined for pixels in the corners on an image, one may add margins.\ Additionally, to keep
+the following formulas simple, let us assume that each coordinate $(i, j)$ corresponds to some
+vertex $v_k$, forming the graph $G = (E, K)$.\ Formally, for each pair $(i, j)$, there exist
+$k \in \mathbb{N}$, such that $v_k = (i, j)$.\ Now, define $S = \{-1, 1\}$ and map our pixels by applying the
+following function
 $$
 \hat{Z}_{ij} =
 \begin{cases}
@@ -505,13 +515,12 @@ and in each step we choose which dimension should be updated guided by the gradi
 
 \begin{figure}[t]
 \centering
-\includegraphics[scale=0.8]{gradient_example}
-\caption{An example of how the gradient of a discrete state $x$ can be leveraged to pick the next state in 2
-dimensional space. In this case, the gradient (green arrow) strongly points to the neighbour on the right side
-of $x$ and slightly to the top neighbour. Based on this, we expect our method to choose the right neighbour as the
-next state with a very high probability, while the top neighbour should be picked with the significantly less
-probability and other neighbours should be ignored (neighbours are marked in red). Other states that are not direct
-neighbours of $x$ are marked in purple.}
+\includegraphics[scale=1.0]{gradient_example}
+\caption{An example of how the gradient of a discrete state (marked in green) can be leveraged to pick the next state
+in 4 dimensional space of binary images.\ In this case, the gradient (green arrow) strongly points to the neighbour on
+the right side of $x$ and slightly to the top neighbour. Based on this, we expect our method to choose the right
+neighbour as the next state with a very high probability, while the top neighbour should be picked with the
+significantly less probability and other neighbours should be ignored.}
 \label{fig:gradient_example}
 \end{figure}
 
@@ -646,7 +655,7 @@ $L_1$ errors are averaged.\newline\newline\newline
 \includegraphics[scale=0.475]{binary_data_examples}
 \caption{Examples of generated image pairs: ground-truth images (at the top) and observations (at the bottom).
 The images on the left and in the center were generated with the noise level $\tilde{\alpha} = 0.1$, while the
-image on right was generated with the noise level $\tilde{\alpha} = 0.15$.}
+images on the right were generated with the noise level $\tilde{\alpha} = 0.15$.}
 \label{fig:binary_data_examples}
 \end{figure}
 
@@ -655,7 +664,7 @@ image on right was generated with the noise level $\tilde{\alpha} = 0.15$.}
 As part of our analysis, we have plotted the rate of convergence depending on the input resolution.\ The
 results of the experiment are shown in \textit{Figure} \ref{fig:binary_input_size_plots}.\ In
 both cases of $300{\times}300$ and $1000{\times}1000$ images, the noise level was set to $\tilde{\alpha} = 0.1$
-and the observation strength was set to $1 - \alpha = 1 - \tilde{\alpha}$.\ As it is shown in the plots,
+and the observation strength was set to $1 - \alpha = 1 - \tilde{\alpha}$.\ As it is shown in the diagrams,
 the gradient-based method converges to an original image within one hundred thousand steps.\ In contrast,
 the Gibbs sampling method needs millions of iterations in order to converge to an original image.
 
@@ -665,7 +674,7 @@ In this section, we explore the impact of the noise level $\tilde{\alpha}$.\ In 
 methods are able to reconstruct original images, we have run our experiments for
 $\tilde{\alpha} \in \{0.05, 0.10, 0.15\}$ and set the observation strength $1 - \alpha = 1 - \tilde{\alpha}$.\ The
 results of the analysis are shown in \textit{Figure} \ref{fig:binary_noise_level_plots}.\ From the presented
-plots, it follows that both methods converge to the original images, even in the case of relatively high noise
+diagrams, it follows that both methods converge to the original images, even in the case of relatively high noise
 level.\newline\newline\newline\newline
 
 \begin{figure}[H]
@@ -713,8 +722,8 @@ much flexibility.}
 The last conducted experiment involved comparing visual outputs produced by the Gibbs sampling and our
 gradient-based method.\ To do so, we performed $100\ 000$ steps of both methods and converted the last states
 of the simulated chains into images.\ The outcomes of this analysis are presented in \textit{Figure}
-\ref{fig:binary_qualitative_results}.\ The results of this experiment confirms that our method is superior to
-the Gibbs sampling method.\ In particular, our method generated images that look identical to the original images,
+\ref{fig:binary_qualitative_results}.\ The results of this experiment confirm that our method is superior to
+the Gibbs sampling method.\ In particular, it generated images that look identical to the original images,
 even in dense text areas.\ Furthermore, the difference of quality between both methods is more visible for
 high-resolution images as our method scales better to high-dimensional data than the Gibbs sampling
 method.\newline\newline\newline\newline\newline\newline
@@ -735,7 +744,7 @@ have a resolution of $1000{\times}1000$.}
 
 \numberedchapter{Experiments: grayscale images}\label{chapter:grayscale_experiments}
 
-The problem of denoising grayscale images is more complex than the same problem for binary
+The problem of denoising grayscale images is more complex than the analogous problem for binary
 images.\ Actually, the space of possible states is exponentially larger as each pixel can take $255$ different
 values.\ In this chapter we will consider a model in which the noise is added to an original image by flipping
 the values of random pixels.\ We will show that our method solves the stated problem in an effective manner
@@ -776,7 +785,7 @@ photos.\newline\newline\newline\newline\newline
 
 In order to determine whether our method is able to reconstruct original images, we performed the analysis with
 $\tilde{\alpha} = 0.1$ and $\tilde{\alpha} = 0.2$ while comparing it with the Gibbs sampling method.\ We set
-the observation strength $\alpha = \tilde{\alpha}$, however we observed that both optimization methods are not
+the observation strength $\alpha = \tilde{\alpha}$, nevertheless we observed that both optimization methods are not
 sensitive to the value of this parameter and provide good estimations when $\alpha \neq \tilde{\alpha}$.\ The
 results of our experiment are shown in \textit{Figure} \ref{fig:grayscale_noise_level_plots}.\ The first outcome
 is that our method converges to an original image in two hundred thousand steps, fixing some corrupted pixel in each
@@ -816,37 +825,39 @@ side were generated with the noise level $\tilde{\alpha} = 0.2$.}
 
 \numberedchapter{Summary}
 
-Markov chains are applicable to many real-world problems.\ In this paper, we have shown how a seemingly unrelated
-problem of image denoising can be rephrased in a way that allows us to apply the discussed Markov chain Monte Carlo
-methods.\ We have also identified the main downside of the classical Gibbs sampling method in the context of the
-application to the considered problem, enabling us to develop more efficient approach.\ The presented
-gradient-based approach was designed to optimize pixels making up the best candidates.\ During our experiments we have
-shown that the developed method actually performs the minimal number of steps needed to reconstruct an original
-image.\ Furthermore, we have developed an algorithm that performs one step of our method in the time complexity
-$\mathcal{O}(1)$.\ The conducted analysis clearly showed that the developed approach can scale to multi-million
-dimensional spaces, while it is not the case for the Gibbs sampling method.\ Besides it we proved that our method is
-not sensitive to the observation strength parameter, making it possible to apply it in the cases in which the
-noise level is unknown.\ Finally, we have successfully extended our approach to the case where some pixels of
-a grayscale image are flipped.\ Particularly, our method provided impressing results on real photos, generating
-near-perfect reconstructions.\newline
+In this thesis we have shown how a seemingly unrelated
+problem of image denoising can be rephrased in a way that allows the discussed Markov chain Monte Carlo methods to be
+applied.\ As the first step of our analysis, we have identified the main downside of the classical Gibbs sampling
+algorithm in the context of the considered problem.\ Then, we have developed gradient-based approach that is designed
+to optimize pixels making up the best candidates to update.\ Additionally, we have implemented an algorithm that
+performs one step of the developed method in the time complexity $\mathcal{O}(1)$.\ During our experiments we have
+shown that our approach actually outperforms the Gibbs sampling algorithm.\ In particular, the conducted analysis
+clearly showed that the developed approach can scale to multi-million dimensional spaces, while it is not the case for
+the Gibbs sampling algorithm.\ Besides it, we proved that our method is not sensitive to the observation strength
+parameter, which makes it possible to apply it even when the noise level is unknown.\ Finally, we have
+successfully extended our approach to the case where some pixels of a grayscale image are flipped.\ Particularly,
+our method provided impressing results on noisy photos, generating near-perfect reconstructions.\newline
 
-\noindent Although we have conducted many experiments of our approach, there is still much room for further
-extensions.\ One of the interesting applications include the case in which the noise of grayscale images is
+\noindent Although we have conducted many experiments of our method, there is still much room for further
+extensions.\ For instance, one may extend our algorithm to denoise grayscale images that are
 generated by adding random perturbations.\ The other practical application is to tackle the problem of
-denoising \textit{RGB} images.\ Lastly, our algorithm can be applied to other problems than the image denoising problem.
+denoising \textit{RGB} images.\ Lastly, our algorithm can be applied to other problems than image denoising.
 
 
 \begin{thebibliography}{9}
 
 \bibitem{markov_chains_book}
-O. Häggström - \textit{Finite Markov chains and algorithmic applications (2002)}
+O. Häggström - \textit{Finite Markov chains and algorithmic applications. Cambridge University
+Press; 1st edition (2002)}
 
 \bibitem{mcmc_book}
-P. Bremaud - \textit{Markov chains: Gibbs Fields, Monte Carlo Simulation, and Queues (1999)}
+P. Bremaud - \textit{Markov chains: Gibbs Fields, Monte Carlo Simulation, and Queues. Springer-Verlag New
+York (1999)}
 
 \bibitem{oops_gradient}
 W. Grathwohl, K. Swersky, M. Hashemi, D. Duvenaud, C. Maddison -
-\textit{Oops I Took A Gradient: Scalable Sampling for Discrete Distributions (2021)}
+\textit{Oops I Took A Gradient: Scalable Sampling for Discrete Distributions. Link to arXiv paper:
+\url{https://arxiv.org/pdf/2102.04509.pdf} (2021)}
 
 \end{thebibliography}
 
