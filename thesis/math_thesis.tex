@@ -62,9 +62,23 @@
 \advisor        {dr hab. Paweł Lorek}
 \date           {29 sierpnia 2021}
 
-\englishabstract{TODO}
+\englishabstract{Markov chain Monte Carlo (MCMC) methods form a class of algorithms for sampling from a given
+probability distribution.\ In particular, they proved to be effective when the state space is very large.\ In this
+thesis we show how to leverage the above-mentioned methods to denoise binary images.\ Furthermore, we develop
+gradient-based MCMC method and provide an efficient implementation that outperforms classic MCMC algorithms in terms of
+denoising speed.\ Additionally, we present the results of our experiments, examining the performance of our method
+depending on image size and noise level.\ Finally, we extend our approach to the case where some pixels of a grayscale
+image are flipped, while showing that it generates near-perfect reconstructions of original images in relatively
+low number of steps.}
 
-\polishabstract{TODO}
+\polishabstract{Próbkowanie Monte Carlo łańcuchami Markowa (MCMC) to klasa algorytmów służąca do próbkowania z danego
+rozkładu prawdopodobieństwa.\ W szczególności okazały się one skuteczne w przypadkach, gdy przestrzeń stanów jest
+bardzo duża.\ W poniższej pracy dyplomowej pokazujemy, jak wykorzystać powyższe metody do odszumiania obrazów
+binarnych.\ Ponadto opracowujemy gradientową metodę MCMC oraz jej wydajną implementację, która przewyższa
+klasyczne algorytmy MCMC pod względem szybkości odszumiania.\ Dodatkowo przedstawiamy wyniki naszych eksperymentów,
+badających wydajność naszej metody w zależności od rozmiaru obrazu i poziomu szumu.\ Na koniec rozszerzamy nasze
+podejście do przypadku, gdy niektóre piksele szarego obrazka są odwrócone, jednocześnie pokazując że nasza metoda
+rekonstruuje oryginalne obrazki w stosunkowo niewielkiej liczbie kroków.}
 
 \begin{document}
 
@@ -474,8 +488,8 @@ components of the coupling product are equal, making the update rule of the Gibb
 
 \numberedchapter{Gradient-based image denoising}
 
-Although we have shown how to remove noise from images using Gibbs sampling, we still lack an efficient way of
-performing our algorithm.\ In order to convince yourself that our method
+Although we have shown how to remove noise from images using Gibbs sampling, we still lack an efficient algorithm
+that would denoise images in a low number of steps.\ In order to convince yourself that the presented method
 might perform many unnecessary steps, recall that it samples $v \in V$ in each step uniformly.\ From the perspective
 of our problem, it means that each pixel has the same probability of being chosen and potentially updated.\ While
 it may be an effective approach at the beginning of the denoising process, closer to the end of the process there is
@@ -490,37 +504,44 @@ step of the presented algorithm in the time complexity $\mathcal{O}(1)$.
 
 In \textit{Chapter} \ref{chapter:ising_model} we have shown how to sample high-potential configurations by
 utilising MCMC methods.\ While this approach effectively approximates the stationary distribution of the constructed
-Markov chain, our final goal is to find $\bar{x} = \argmax_x H(x)$.\ In the case of continuous functions, such problem
-is often tackled by computing a gradient of a given function $f(x)$ with respect to the vector $x$ and taking a small
-step in the direction given by the gradient i.e.\ $x' = x + \gamma \nabla f(x)$, where $\gamma$ is a parameter
+Markov chain, our final goal is to find $\tilde{x} = \argmax_x H(x)$.\ In the case of continuous functions, such problem
+is often tackled by computing a gradient of a given function $f(x^{(k)})$ with respect to the current state $x^{(k)}$.
+Then, a small step is taken in the direction given by the gradient
+i.e.\ $x^{(k + 1)} = x^{(k)} + \gamma \nabla f(x^{(k)})$, where $\gamma$ is a parameter
 controlling the size of the step.\ The method is repeated many times until it converges to the local/global optima of
 the given function $f$.\newline
 
-\noindent In our scenario, $x$ represents an image in a discrete space, preventing us from applying the gradient update
-rule directly.\ But we can still leverage information contained in the gradient as it indicates the direction that
-should be followed.\ A toy example illustrating this intuition is shown in $Figure$ \ref{fig:gradient_example}.\ We
-propose to utilise the gradient information by constructing the probability distribution over neighbours of the current
-state $x$, based on its gradient.\newline\newline
+\noindent In our scenario, $x$ represents an $n \times m$ image, which we can think of as a point in
+$M = n \times m$ dimensional space.\ As the space of images is discrete, the above-discussed gradient update rule
+cannot be applied directly.\ Nevertheless, the gradient of the function $H(x)$ with respect to the vector $x$ exists
+and the information contained in it can be treated as a hint on which direction should be followed.\ A toy example
+illustrating this intuition is shown in $Figure$ \ref{fig:gradient_example}.\newline
 
-\noindent Specifically, let us sample a dimension (aka pixel number) $D$ following the
-distribution
+\noindent We propose to utilise the gradient information to construct the probability distribution over the
+neighbours of the current state and update the state according to the constructed distribution.\ Specifically, let
+us assume that the goal is to find an optimal image $\tilde{x}$ according to some function $\tilde{H}(x)$.\ At each
+step, assuming that the current state is denoted by $x^{(k)}$, we sample a dimension (aka pixel number) $D$
+following the distribution
 $$
-P(\tilde{X} = i) = \frac{e^{|(\nabla f(x))_i|}}{\sum\limits_{j = 1}^{n} e^{|(\nabla f(x))_j|}} =
-softmax(|\nabla f(x)|)
+P(\tilde{R}^{(k)} = i) = \frac{e^{|(\nabla \tilde{H}(x^{(k)}))_i|}}{\sum\limits_{j = 1}^{n}
+e^{|(\nabla \tilde{H}(x^{(k)}))_j|}} = softmax(|\nabla \tilde{H}(x^{(k)})|)
 $$
-and construct the next state $x'$ by increasing/decreasing the value of
-$x_D$ (in a way that we stay in our discrete domain) based on whether $(\nabla f(x))_D$ is positive/negative and setting
-$x'_i = x_i$ for all $i \neq D$.\ In practice, it means that the neighbours of $x$ differ in exactly one dimension
-and in each step we choose which dimension should be updated guided by the gradient of $x$.\newline
+and construct the next state $x^{(k + 1)}$ by increasing/decreasing the value of
+$x^{(k)}_D$ (in a way that we stay in our discrete domain) based on whether $(\nabla f(x^{(k)}))_D$ is
+positive/negative.\ For the remaining dimensions $i \neq D$, we copy the values from
+$x^{(k)}$ i.e.\ we set $x^{(k + 1)}_i = x^{(k)}_i$.\ Intuitively, all neighbours of the state $x^{(k)}$
+differ in exactly one dimension (aka pixel) from $x^{(k)}$ and in each step we choose which dimension
+should be updated guided by the gradient of $\tilde{H}(x^{(k)})$.\newline
 
 \begin{figure}[t]
 \centering
-\includegraphics[scale=1.0]{gradient_example}
-\caption{An example of how the gradient of a discrete state (marked in green) can be leveraged to pick the next state
-in 4 dimensional space of binary images.\ In this case, the gradient (green arrow) strongly points to the neighbour on
-the right side of $x$ and slightly to the top neighbour. Based on this, we expect our method to choose the right
-neighbour as the next state with a very high probability, while the top neighbour should be picked with the
-significantly less probability and other neighbours should be ignored.}
+\includegraphics[scale=0.9]{gradient_example}
+\caption{An example of how the gradient of $\tilde{H}(x)$ with respect to the current state $x^{(k)}$ (marked in green)
+can be leveraged to pick the next state $x^{(k + 1)}$, iteratively converging to $argmax_x \tilde{H}(x)$.\ In this
+case, the gradient (green arrow) of the function $\tilde{H}(x)$ strongly points to the neighbour on the right side
+of the current state and slightly to the top neighbour.\ Based on this, we expect our method to choose the right
+neighbour as the next state $x^{(k + 1)}$ with a very high probability, while the top neighbour should be picked with
+the significantly less probability and other neighbours should be ignored.}
 \label{fig:gradient_example}
 \end{figure}
 
@@ -531,11 +552,14 @@ H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
 \prod\limits_{j \in V}( \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
 \mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha)
 $$
-which may be transformed to the more general form
+where each coordinate $(i, j)$ of an image corresponds to some vertex $v_k$, forming the graph $G = (E, K)$.\ This
+formula can be transformed to the more general form
 $$
 H(x) = e^{x^T W x} = e^{\tilde{H}(x)}
 $$
-where $W$ is $n \times n$ matrix encoding the observation and coupling components of the potential function.\ In
+where $W$ is $n \times n$ matrix encoding the observation and the coupling components of the potential
+function.\ Particularly, in this case $W$ is an adjacency matrix of the graph $G = (E, K)$ scaled by the parameter
+$\beta$, except for the diagonal elements for which either $W_{ii} = ln(\alpha)$ or $W_{ii} = ln(1 - \alpha)$.\ In
 this formulation, the goal is to find $\argmax_x \tilde{H}(x) = x^T W x$.\ Taking the gradient of
 $\tilde{H}(x)$ with respect to $x$, we get
 $$
@@ -548,76 +572,76 @@ $$
 Q_x = softmax(|\nabla \tilde{H}(x)|)
 $$
 which implies that in order perform our gradient-based update rule, one may use already developed
-\textit{Algorithm} \ref{alg:metropolis_hastings}.\ Furthermore, the developed proposal distribution is simple as
-it only takes into account the spins of neighbours of the current state and its consistency with observation
-$\tilde{Z}$.
+\textit{Algorithm} \ref{alg:metropolis_hastings}.\ Furthermore, the developed proposal distribution is simple,
+particularly for each dimension (aka pixel) the developed formula contains only the neighbouring
+dimensions (aka pixels).
 
 \section{Efficient implementation for image denoising}\label{sec:efficient_denoising}
 
-While developed gradient-based method provides a way to find pixels that should be updated, the naive
-implementation performs one step of the algorithm in the time complexity $\mathcal{O}(|V|)$,
-where $|V|$ denotes the number of pixels of a given image.\ In contrast, the Gibbs
+While the developed gradient-based method provides a way to find pixels that should be updated, the naive
+implementation performs one step of the algorithm in the time complexity $\mathcal{O}(M)$,
+where $M$ denotes the number of pixels of a given image.\ In contrast, the Gibbs
 algorithm provides the time complexity $\mathcal{O}(1)$ of one step, which means that it can update
-$\mathcal{O}(|V|)$ random pixels while our method would update only one pixel in the same time.\ This issue makes
+$\mathcal{O}(M)$ random pixels while our method would update only one pixel in the same time.\ This issue makes
 our method not scalable for high-resolution images.\ In this section, we will show how to reduce the complexity
-of our algorithm to $\mathcal{O}(1)$, making it robust to a large number of pixels.\newline
+of our algorithm to $\mathcal{O}(1)$, making it efficient for high-dimensional images.\newline
 
-\noindent Let us assume that the simulated chain is in the state $x$ and we have constructed the proposal distribution
-$Q_x$.\ Now, we sampled some neighbour $x'$ that differs from $x$ by exactly one value of the sampled pixel
-$\tilde{v} \in V$.\ The key observation is that most of the elements of $Q_{x'}$ are equal to the corresponding
-elements of $Q_x$.\ Specifically, $Q_{x'}$ can differ in only 5 places, including $\tilde{v} $ itself and its
-4 neighbours.\ It follows that instead of constructing the whole vector $Q_{x'}$ from scratch, one may recompute
-it in only $\mathcal{O}(1)$ places.\ Furthermore, as each pixel contains only 4 neighbours, their potentials
-can be updated in the time complexity $\mathcal{O}(1)$, which implies that the whole update step has the time
-complexity $\mathcal{O}(1)$.\newline
+\noindent Let us assume that the simulated chain is in the state $x^{(k)}$ and we have already constructed the
+proposal distribution $Q_{x^{(k)}}$.\ Now, we sampled some neighbour $x' \in N_{x^{(k)}}$ of $x^{(k)}$ and set it as the
+next state i.e.\ $x^{(k + 1)} = x'$.\ As we already indicated, $x^{(k)}$ and $x^{(k + 1)}$ differ in exactly one
+dimension $(\overline{i}, \overline{j})$ (aka pixel).\ The key observation to make our algorithm faster is that most of
+the elements of $Q_{x^{(k + 1)}}$ are equal to the corresponding elements of $Q_{x^{(k)}}$.\ Specifically,
+$Q_{x^{(k + 1)}}$ can differ in only 5 places, including $(\overline{i}, \overline{j})$ itself and its 4 neighbours,
+namely $(\overline{i} - 1, \overline{j}), (\overline{i} + 1, \overline{j}), (\overline{i}, \overline{j} - 1)$ and
+$(\overline{i}, \overline{j} + 1)$.\ It follows that instead of constructing the whole vector $Q_{x^{(k + 1)}}$
+from scratch, one may recompute it in only $\mathcal{O}(1)$ places.\ Furthermore, as each pixel contains only 4
+neighbours, the formula $(\nabla \tilde{H}(x))_i = \sum_{i, j} W_{ij} x_j$ can be calculated in the time complexity
+$\mathcal{O}(1)$, which implies that the whole update step has the time complexity $\mathcal{O}(1)$.\newline
 
 \noindent The only part that still slows down our algorithm is the sampling step.\ Actually, the naive implementation
-of this step has $\mathcal{O}(|Q_x|)$ time complexity, where $|Q_x| = |V|$.\ In order to reduce it, one may
-observe that $Q_x$ is constructed in a way that it can take only $\mathcal{O}(1)$ values.\ Particularly,
-for the binary image denoising problem there are $5$ possible values in the coupling part and $2$ possible
-values in the observation part of the expression, which gives only $5 \cdot 2 = 10$ possible values.\ While in the
-grayscale image denoising problem there are more possibilities, it can be significantly reduced by e.g.\ rounding
-values in $Q_x$ to the nearest integers or ignoring very small values that are not likely to be drawn.\ In
-practice, our experiments in \textit{Chapter} \ref{chapter:grayscale_experiments} show that such
+of this step has $\mathcal{O}(M)$ time complexity.\ In order to reduce it, one may
+observe that $Q_{x^{(k)}}$ is constructed in a way that it can take only $\mathcal{O}(1)$ values
+i.e.\ $|\{ Q_{x^{(k)}, x'} : x' \in N_{x^{(k)}} \}| \leq C$, where $N_{x^{(k)}}$ denotes the neighbours of
+$x^{(k)}$. \ Particularly, for the binary image denoising problem there are $5$ possible values in the coupling part
+and $2$ possible values in the observation part of the expression, which gives in total $C = 5 \cdot 2 = 10$ possible
+values.\ While in the grayscale image denoising problem there are more possibilities, it can be significantly reduced
+by e.g.\ rounding values in $Q_x$ to the nearest integers or ignoring very small values that are not likely to be
+drawn.\ In practice, our experiments in \textit{Chapter} \ref{chapter:grayscale_experiments} show that such
 approximations do not impact the quality of denoising, while they provide a significant improvement in terms of
-execution time.\newline
-
-\noindent As it is now clear that $Q_x$ can take only $\mathcal{O}(1)$ values, we provide \textit{Algorithm}
-\ref{alg:sampling_from_q} for sampling from $Q_x$ as well as \textit{Algorithm} \ref{alg:updating_q} for
-updating a potential of a specific pixel (neighbour).\ Both algorithms have the time complexity
-$\mathcal{O}(1)$, implying that the whole step of the Metropolis-Hastings algorithm has the time
-complexity $\mathcal{O}(1)$.\newline
-
-\noindent As part of this thesis, we implemented \textit{Algorithm} \ref{alg:sampling_from_q} and \ref{alg:updating_q}
-in Python.\ Additionally, we implemented Gibbs sampling as the baseline method.\ The results of our experiments are
-presented in \textit{Chapter} \ref{chapter:experiments}.\newline
+execution time.\ We provide \textit{Algorithm} \ref{alg:sampling_from_q} for sampling
+from $Q_x$ as well as \textit{Algorithm} \ref{alg:updating_q} for updating a potential of a specific pixel
+(neighbour).\ Both algorithms have the time complexity $\mathcal{O}(1)$, implying that the whole step of the
+Metropolis-Hastings algorithm has the time complexity $\mathcal{O}(1)$.\ As part of this thesis, we implemented
+\textit{Algorithm} \ref{alg:sampling_from_q} and \ref{alg:updating_q} in Python.\ The results of our experiments are
+presented in \textit{Chapter} \ref{chapter:experiments}.
 
 \begin{algorithm}[H]
 \caption{Sampling from $Q_x$}\label{alg:sampling_from_q}
 \begin{algorithmic}[1]
-\State{\textbf{Input:} A dictionary $P$ mapping potentials to pixels that have a custom potential}
-\State{Compute the probability distribution $X$ over potentials utilising the information about the number
-of elements on each list in $P$}
-\State{Draw a list $L$ from the probability distribution $X$}
-\State{Draw a pixel $p$ uniformly from the list $L$}
-\State{\textbf{Output:} pixel $p$}
+\State{\textbf{Input:} A dictionary $P$ mapping potentials $p_1, \dots, p_C$ to lists of pixels $L_1, \dots, L_C$}
+\State{Compute the probability distribution $T$ over potentials $p_1, \dots, p_C$ utilising the information about the
+number of elements on lists $L_1, \dots, L_C$}
+\State{Draw $p_k$ from the probability distribution $T$ and take the corresponding $L_k$}
+\State{Draw a pixel $v_k$ uniformly from the list $L_k$}
+\State{\textbf{Output:} pixel $v_k$}
 \end{algorithmic}
 \end{algorithm}
 
 \begin{algorithm}[H]
 \caption{Updating a potential in $Q_x$}\label{alg:updating_q}
 \begin{algorithmic}[1]
-\State{\textbf{Input:} A dictionary $P$ mapping potentials to pixels that have a custom potential}
-\State{\textbf{Input:} A dictionary $M$ mapping pixels to their potentials and positions on lists in $P$}
-\State{\textbf{Input:} The position $p$ of a pixel and its new potential $v$}
-\If{$p \in M$}
-  \State{Find a list $L$ and a position of $p$ in $L$ by fetching this information from $M$}
-  \State{Swap element $p$ from $L$ with the last element $e$}
-  \State{Pop the last element from the list $L$}
-  \State{Update the information about the position of $e$ contained in $M$}
+\State{\textbf{Input:} A dictionary $P$ mapping potentials $p_1, \dots, p_C$ to lists of pixels $L_1, \dots, L_C$}
+\State{\textbf{Input:} A dictionary $S$ mapping pixels $v_1, \dots, v_M$ to their potentials
+$\tilde{p}_1, \dots, \tilde{p}_M$ and their positions $\tilde{s}_1, \dots, \tilde{s}_M$ on lists in $P$}
+\State{\textbf{Input:} Pixel $v_k$ and its new potential $u$}
+\If{$v_k \in S$}
+  \State{$(\tilde{p}_k, \tilde{s}_k) = S(v_k), L_{\tilde{k}} = P(\tilde{p}_k)$}
+  \State{Swap the $\tilde{s}_k$-th element on $L_{\tilde{k}}$ with the last element}
+  \State{Pop the last element from the list $L_{\tilde{k}}$}
+  \State{Update $S$ for the pixel that is currently on the position $\tilde{s}_k$ on $L_{\tilde{k}}$}
 \EndIf
-\State{Update $P$ by adding $p$ to the end of the list $\tilde{L}$ corresponding to $v$}
-\State{Update $M$ by providing $v$ and the position of $p$ in $\tilde{L}$}
+\State{Add $v_k$ to the end of the list $P(u)$}
+\State{Update $S$ by providing $v_k$ and the position of $v_k$ on $P(u)$}
 \end{algorithmic}
 \end{algorithm}
 
