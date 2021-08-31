@@ -56,7 +56,7 @@
 \theoremstyle{default_theorem_style}\newtheorem{theorem}{Theorem}
 \theoremstyle{default_theorem_style}\newtheorem{definition}{Definition}
 
-\polishtitle    {Gradientowy algorytm Metropolis-Hastings z aplikacjami do odszumiania obrazów}
+\polishtitle    {Gradientowy algorytm Metropolis-Hastings z zastosowaniami do odszumiania obrazów}
 \englishtitle   {Gradient-based Metropolis-Hastings algorithm with applications to image denoising}
 \author         {Dawid Wegner}
 \advisor        {dr hab. Paweł Lorek}
@@ -210,7 +210,7 @@ i.e.\ $\tilde{\pi} = \pi$.
 Using the fact that each row of $P$ sums to $1.0$, we have
 $$
 (\tilde{\pi} P)_j = \sum\limits_i \tilde{\pi}_i P_{ij} = \sum\limits_i \tilde{\pi}_j P_{ji} =
-\tilde{\pi}_j \sum\limits_i P_{ji} = \tilde{\pi}_j
+\tilde{\pi}_j \sum\limits_i P_{ji} = \tilde{\pi}_j\ .
 $$
 \end{proof}
 
@@ -228,7 +228,7 @@ there exists algorithms for sampling permutations from a uniform distribution, t
 a skewed distribution.\ For instance, let our target distribution be defined based on positions of permutation's
 elements e.g.
 $$
-d(x) = \frac{\prod_{i = 1}^{n} e^{i \cdot x_i}}{Z}
+d(x) = \frac{\prod_{i = 1}^{n} e^{i \cdot x_i}}{Z}\ ,
 $$
 where $x_i$ denotes the $i$-th element of the permutation and $Z$ is the normalising constant.\ While the problem
 of sampling from such distribution can not be tackled using any trivial algorithm, it's possible to simulate the
@@ -257,7 +257,7 @@ P_{ij} =
 \begin{cases}
   Q_{ij}\min{(1, \frac{\pi_j Q_{ji}}{\pi_i Q_{ij}})} &\text{if $i \ne j$}\\
   1 - \sum\limits_{k \ne i}Q_{ik} \min{(1, \frac{\pi_k Q_{ki}}{\pi_i Q_{ik}})} &\text{otherwise}
-\end{cases}
+\end{cases}\ .
 $$
 
 \noindent While at first it may be unintuitive why $P$ would have a stationary distribution $\pi$, it can be easily
@@ -265,7 +265,7 @@ proved.\ To do so, let us show that for any $i, j$ the equality $\pi_i P_{ij} = 
 any loss of generality, we can assume that $\frac{\pi_j Q_{ji}}{\pi_i Q_{ij}} \leq 1$, which implies that
 $\frac{\pi_i Q_{ij}}{\pi_j Q_{ji}} \geq 1$.\ Putting everything together, we get
 $$
-\pi_i P_{ij} = \pi_i Q_{ij} \frac{\pi_j Q_{ji}}{\pi_i Q_{ij}} = \pi_j Q_{ji} = \pi_j P_{ji}
+\pi_i P_{ij} = \pi_i Q_{ij} \frac{\pi_j Q_{ji}}{\pi_i Q_{ij}} = \pi_j Q_{ji} = \pi_j P_{ji}\ ,
 $$
 which proves that $\pi_i P_{ij} = \pi_j P_{ji}$.\ The case when $\frac{\pi_j Q_{ji}}{\pi_i Q_{ij}} \geq 1$ is
 symmetric.\ Using \textit{Theorem} \ref{reversible_chain}, we can conclude that $\pi$ is the stationary distribution
@@ -308,7 +308,7 @@ possible graph colouring i.e.\ each vertex $v \in V$ is assigned one colour $s \
 \noindent Now, assume that we are given a \textit{potential} function $H : E \to \mathbb R_{\geq 0}$ that assigns an
 unnormalised probability to each configuration $e \in E$ i.e.\
 $$
-\pi(e) = \frac{H(e)}{Z}
+\pi(e) = \frac{H(e)}{Z}\ ,
 $$
 where $Z$ is the normalising constant.\ Our goal is to sample configurations with probabilities given by $\pi$.\ Let
 us show how to simulate a Markov chain satisfying this condition.\ To
@@ -316,10 +316,10 @@ perform the $(k + 1)$-th step of the algorithm, assuming that the current state 
 $X_k = e_i$, first draw a vertex $\tilde{v} \in V$ uniformly and for each $s \in S$ calculate the probability
 $$
 P(J(\tilde{v}) = s\ |\ J(-\tilde{v})=e_i(-\tilde{v})) = \frac{\pi_{e(\tilde{v}) =
-s,e(-\tilde{v}) = e_i(-\tilde{v})}}{\sum_{s' \in S} \pi_{e(\tilde{v}) = s', e(-\tilde{v}) = e_i(-\tilde{v})}}
+s,e(-\tilde{v}) = e_i(-\tilde{v})}}{\sum_{s' \in S} \pi_{e(\tilde{v}) = s', e(-\tilde{v}) = e_i(-\tilde{v})}}\ ,
 $$
-where $J \sim \pi$ is a random variable, $e(\tilde{v})$ refers to $s \in S$ assigned to the vertex $\tilde{v} \in V$ and
-$e(-\tilde{v})$ denotes assignments of $s \in S$ to vertices $v \in V \setminus \{\tilde{v}\}$.\ The last step of
+where $J \sim \pi$ is a random variable, $e(\tilde{v})$ refers to $s \in S$ assigned to the vertex $\tilde{v} \in V$
+and $e(-\tilde{v})$ denotes assignments of $s \in S$ to vertices $v \in V \setminus \{\tilde{v}\}$.\ The last step of
 the algorithm involves sampling $\tilde{s} \in S$ from the probability distribution
 $P(J(\tilde{v}) = s\ |\ J(-\tilde{v})=e_i(-\tilde{v}))$ and setting
 $$
@@ -327,7 +327,7 @@ X_{k + 1}(v) =
 \begin{cases}
   \tilde{s} &\text{if $v = \tilde{v}$}\\
   X_k(v) &\text{otherwise}
-\end{cases}
+\end{cases}\ .
 $$
 
 \noindent The presented \textit{Gibbs sampling} algorithm is a special case of the Metropolis-Hastings algorithm
@@ -337,10 +337,9 @@ Q_{ij} =
 \begin{cases}
   \frac{1}{Z} &\text{iff $i$ is adjacent to $j$}\\
   0 &\text{otherwise}
-\end{cases}
+\end{cases}\ ,
 $$
-
-\noindent which provides an instant proof of the the fact that the presented algorithm simulates a Markov chain with the
+which provides an instant proof of the the fact that the presented algorithm simulates a Markov chain with the
 stationary distribution $\pi$.\ An alternative proof of this fact can be found in \cite{mcmc_book}.\ The advantage of
 the $Gibbs$ algorithm over the $Metropolis$-$Hastings$ algorithm is that it avoids constructing  the proposal
 distribution $Q$.\ At the same time, for some cases the lack of control over $Q$ is a major downside as we will see
@@ -359,10 +358,9 @@ In this section we will follow the notions introduced in \textit{Section} \ref{s
 a graph $G = (V, K)$ and a set $S = \{-1, 1\}$.\ Now, define a configuration $e_i : V \to S$ as a function that
 maps vertices of $G$ to elements from $S$, and a potential function
 $$
-H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
+H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}\ ,
 $$
-
-\noindent where $\beta$ is a parameter that controls the strength of $coupling$ between vertices.\ The described model
+where $\beta$ is a parameter that controls the strength of $coupling$ between vertices.\ The described model
 is called the $Ising$ model.\ In physics, the elements $\{-1, \, 1\}$ of the set $S$ are interpreted as a negative and a
 positive \textit{spin} respectively.\ Assuming that $\beta > 0$, the model assigns high probabilities to configurations
 having the same spins assigned for neighbouring vertices.\ Note that the Ising model is uniquely determined for
@@ -374,7 +372,7 @@ Let us assume that we are given the Ising model represented by the potential fun
 $H : E \to \mathbb R_{\geq 0}$.\ Our goal is to produce samples from a probability distribution $\pi$ defined by
 the formula
 $$
-\pi(e) = \frac{H(e)}{Z}
+\pi(e) = \frac{H(e)}{Z}\ ,
 $$
 where $Z$ is the normalising constant.\ One way of approaching this problem is to utilise MCMC methods described in
 the $Chapter$ \ref{chapter:mcmc}.\newline
@@ -392,7 +390,7 @@ P(J(\tilde{v}) = -1\ |\ J(-\tilde{v})=e_i(-\tilde{v})) =
 $$
 and utilising the fact that $|S| = 2$
 $$
-P(J(\tilde{v}) = 1\ |\ J(-\tilde{v})=e_i(-\tilde{v})) = 1 - P(J(\tilde{v}) = -1\ |\ J(-\tilde{v})=e_i(-\tilde{v}))
+P(J(\tilde{v}) = 1\ |\ J(-\tilde{v})=e_i(-\tilde{v})) = 1 - P(J(\tilde{v}) = -1\ |\ J(-\tilde{v})=e_i(-\tilde{v}))\ .
 $$
 
 \noindent As we just have shown, the problem of updating the spin of a vertex $\tilde{v}$ reduces to the computation of
@@ -423,7 +421,7 @@ $$
 \begin{cases}
   255 - X_{ij} &\text{if $U_{ij} < \alpha$}\\
   X_{ij} &\text{otherwise}
-\end{cases}
+\end{cases}\ ,
 $$
 where $U_{ij}$ is an i.i.d.\ sequence of $Unif(0, 1)$ random variables.\newline
 
@@ -444,7 +442,7 @@ $$
 \begin{cases}
   -1 &\text{if $\tilde{Z}_{ij} = 0$}\\
   1 &\text{if $\tilde{Z}_{ij} = 255$}
-\end{cases}
+\end{cases}\ .
 $$
 
 \noindent The described model is the Ising model that assures that neighbouring pixels have the same values.\ In order
@@ -454,10 +452,9 @@ function:
 $$
 H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
 \prod\limits_{j \in V}(\mathbbm{1}_{e_i(v_j) = \hat{Z}(v_j)}(1 - \alpha) +
-\mathbbm{1}_{e_i(v_j) \neq \hat{Z}(v_j)}\alpha)
+\mathbbm{1}_{e_i(v_j) \neq \hat{Z}(v_j)}\alpha)\ ,
 $$
-
-\noindent where $1 - \alpha, \beta$ are the parameters controlling the observation strength and the coupling strength
+where $1 - \alpha, \beta$ are the parameters controlling the observation strength and the coupling strength
 respectively.\ Intuitively, increasing the observation strength causes our model to put less weight to the
 observed pixels in $\tilde{Z}$, while increasing the coupling strength enforces the neighbouring pixels to have the
 same values.
@@ -473,7 +470,7 @@ $$
 \begin{cases}
   255 - X_{ij} &\text{if $U_{ij} < \tilde{\alpha}$}\\
   X_{ij} &\text{otherwise}
-\end{cases}
+\end{cases}\ ,
 $$
 where $U_{ij}$ is an i.i.d.\ sequence of $Unif(0, 1)$ random variables.\ We leave more general case for the future
 work.\ Similarly to the case of binary images, our optimization goal is to maximise the potential function that
@@ -541,7 +538,7 @@ should be updated guided by the gradient of $\tilde{H}(x^{(k)})$.\newline
 \centering
 \includegraphics[scale=0.9]{gradient_example}
 \caption{An example of how the gradient of $\tilde{H}(x)$ with respect to the current state $x^{(k)}$ (marked in green)
-can be leveraged to pick the next state $x^{(k + 1)}$, iteratively converging to $argmax_x \tilde{H}(x)$.\ In this
+can be leveraged to pick the next state $x^{(k + 1)}$, iteratively converging to $\argmax_x \tilde{H}(x)$.\ In this
 case, the gradient (green arrow) of the function $\tilde{H}(x)$ strongly points to the neighbour on the right side
 of the current state and slightly to the top neighbour.\ Based on this, we expect our method to choose the right
 neighbour as the next state $x^{(k + 1)}$ with a very high probability, while the top neighbour should be picked with
@@ -554,12 +551,12 @@ for our problem is defined by the potential function
 $$
 H(e_i) = H(x) = \prod\limits_{(j, k) \in K} e^{\beta x(v_j)x(v_k)}
 \prod\limits_{j \in V}( \mathbbm{1}_{x(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
-\mathbbm{1}_{x(v_j) \neq \tilde{Z}(v_j)}\alpha)
+\mathbbm{1}_{x(v_j) \neq \tilde{Z}(v_j)}\alpha)\ ,
 $$
 where each coordinate $(i, j)$ of an image corresponds to some vertex $v_k$, forming the graph $G = (E, K)$.\ This
 formula can be transformed to the more general form
 $$
-H(x) = e^{x^T W x} = e^{\tilde{H}(x)}
+H(x) = e^{x^T W x} = e^{\tilde{H}(x)}\ ,
 $$
 where $W$ is $n \times n$ matrix encoding the observation and the coupling components of the potential
 function.\ Particularly, in this case $W$ is an adjacency matrix of the graph $G = (E, K)$ scaled by the parameter
@@ -567,13 +564,13 @@ $\beta$, except for the diagonal elements for which either $W_{ii} = ln(\alpha)$
 this formulation, the goal is to find $\argmax_x \tilde{H}(x) = x^T W x$.\ Taking the gradient of
 $\tilde{H}(x)$ with respect to $x$, we get
 $$
-(\nabla \tilde{H}(x))_i = (2W x)_i = \sum_{i, j} W_{ij} x_j
+(\nabla \tilde{H}(x))_i = (2W x)_i = \sum_{i, j} W_{ij} x_j\ ,
 $$
 which enables us to sample a neighbour of $x$ according to the probability distribution
 $softmax(|\nabla \tilde{H}(x)|)$.\ Interestingly, we may interpret this process as a one step of the
 Metropolis-Hastings algorithm with the proposal distribution
 $$
-Q_x = softmax(|\nabla \tilde{H}(x)|)
+Q_x = softmax(|\nabla \tilde{H}(x)|)\ ,
 $$
 which implies that in order perform our gradient-based update rule, one may use already developed
 \textit{Algorithm} \ref{alg:metropolis_hastings}.\ Furthermore, the developed proposal distribution is simple,
@@ -671,7 +668,7 @@ $\tilde{\alpha} \in \{0.05, 0.1, 0.15, 0.2\}$.\newline
 fixed number of iterations.\ During the optimization process, we measure the similarity between the currently
 generated image and the ground-truth image by measuring the mean absolute error between the images:
 $$
-L_1(\tilde{X}, X) = \sum\limits_{i = 1}^n \frac{|\tilde{X}_i - X_i|}{n}
+L_1(\tilde{X}, X) = \sum\limits_{i = 1}^n \frac{|\tilde{X}_i - X_i|}{n}\ ,
 $$
 where $\tilde{X}$ denotes the generated image and $X$ denotes the original image.\ As we keep pixel values in the
 range $[0, 255]$, we have $L_1(\tilde{X}, X) \in [0, 255]$, where $0$ means that images are the same, while
@@ -788,14 +785,14 @@ Z_{ij} =
 \begin{cases}
   255 - X_{ij} &\text{if $U_{ij} < \tilde{\alpha}$}\\
   X_{ij} &\text{otherwise}
-\end{cases}
+\end{cases}\ ,
 $$
 where $U_{ij}$ is an i.i.d.\ sequence of $Unif(0, 1)$ random variables and $\tilde{\alpha} \in \{0.1, 0.2\}$ controls
 the noise level.\ An example of an original photo along with its noisy versions is presented
 in \textit{Figure} \ref{fig:grayscale_data_examples}.\ In order to measure the quality of reconstructed images,
 we use already defined $L_1$ loss function
 $$
-L_1(\tilde{X}, X) = \sum\limits_{i = 1}^n \frac{|\tilde{X}_i - X_i|}{n}
+L_1(\tilde{X}, X) = \sum\limits_{i = 1}^n \frac{|\tilde{X}_i - X_i|}{n}\ ,
 $$
 where $\tilde{X_i}, X_i \in \{0, 1,  \dots, 255\}$.\ As a result, it holds $L_1(\tilde{X}, X) \in [0,255]$, where 0
 denotes the perfect prediction.\ The $L_1$ loss is averaged over all collected

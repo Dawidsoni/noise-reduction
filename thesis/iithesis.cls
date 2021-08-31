@@ -293,18 +293,23 @@
 }
 
 
+\newenvironment{customcenter}[1][\topsep]
+  {\setlength{\topsep}{#1}\par\kern\topsep\centering}
+  {\par\kern\topsep}
+
 
 \renewcommand \maketitlehookb {
 
   \vfilneg
 
-  \begin{center}
+  \Large
 
   \if@pol{\selectlanguage{english}(\@englishtitle)}
 
-         {\selectlanguage{polish}(\@polishtitle)}
-  \newline\newline\newline
-  \end{center}
+         {
+           \begin{customcenter}[0pt]{\selectlanguage{polish}\@polishtitle}\end{customcenter}
+           \begin{center} \end{center}
+         }
 
   \selectlanguage{polish}
 
