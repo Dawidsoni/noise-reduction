@@ -84,20 +84,24 @@ rekonstruuje oryginalne obrazki w stosunkowo niewielkiej liczbie kroków.}
 
 \numberedchapter{Introduction}
 
-One of the main challenges in Computer Vision is the image denoising problem, in which the goal is to reconstruct an
-original image given its noisy version.\ The considered problem plays an important role in the area of image
-retrieval as the noise is present in many practical situations e.g.\ on photos taken with cameras.\ Moreover, the noise
-cannot be removed using simple heuristics.\ While many sophisticated approaches have been already proposed to solve
-the stated problem, it remains an open area of research.\newline
+Markov chain Monte Carlo (MCMC) methods are used to simulate a random variable over a very large space.\ These
+techniques have been successfully applied to many complex problems, like sampling graph colorings with given
+probabilities.\ From the theoretical perspective, MCMC methods operate by constructing a Markov Chain, whose
+stationary distribution matches a given target distribution to sample from.\ The ergodic theorem for Markov chains
+states that under certain conditions, the constructed chain always converges to its stationary distribution.\ One
+of the most known MCMC methods is known as the Metropolis-Hastings algorithm, whose the main component is the proposal
+distribution used to transition to new states.\ In most applications, the proposal distribution is independent from
+the target distribution.\ In this thesis, we propose to utilise gradient information contained in the target
+distribution in order to increase the converge rate of simulated chains.\ While similar approach is taken in
+\cite{oops_gradient}, we put more effort into how to implement this method efficiently for sparse graphs.\newline
 
-\noindent In this thesis we tackle the problem of denoising binary images by reformulating it to the problem of
-drawing samples from a distribution.\ In order to solve the problem posed in this way, we incorporate Markov chain
-Monte Carlo methods.\ Furthermore, we present the downsides of the classical Gibbs sampling method and develop
-gradient-based approach, showing that it can be thought of the Metropolis-Hastings algorithm with the custom proposal
-distribution.\ Finally, we provide an algorithm to perform one iteration of our gradient-based approach in the
-time complexity $\mathcal{O}(1)$ and extend it to the case where some pixels of a grayscale image are
-flipped.\ Our theoretical studies are supported by various experiments, proving that our method is able to
-reconstruct original images and in particular is superior to the Gibbs sampling method.
+\noindent One of the main challenges in Computer Vision is the image denoising problem, in which the goal is to
+reconstruct an original image given its noisy version.\ The considered problem plays an important role in the area
+of image retrieval as the noise is present in many practical situations e.g.\ on photos taken with cameras.\ Moreover,
+the noise cannot be removed using simple heuristics.\ While many sophisticated approaches have been already proposed
+to solve the stated problem, it remains an open area of research.\ In this thesis, we tackle the problem of image
+denoising using the developed MCMC method.\ Additionally, we provide an efficient implementation of our
+method in Python.
 
 \numberedchapter{Markov chains}
 
@@ -523,7 +527,7 @@ us assume that the goal is to find an optimal image $\tilde{x}$ according to som
 step, assuming that the current state is denoted by $x^{(k)}$, we sample a dimension (aka pixel number) $D$
 following the distribution
 $$
-P(\tilde{R}^{(k)} = i) = \frac{e^{|(\nabla \tilde{H}(x^{(k)}))_i|}}{\sum\limits_{j = 1}^{n}
+P(D = i) = \frac{e^{|(\nabla \tilde{H}(x^{(k)}))_i|}}{\sum\limits_{j = 1}^{n}
 e^{|(\nabla \tilde{H}(x^{(k)}))_j|}} = softmax(|\nabla \tilde{H}(x^{(k)})|)
 $$
 and construct the next state $x^{(k + 1)}$ by increasing/decreasing the value of
@@ -548,9 +552,9 @@ the significantly less probability and other neighbours should be ignored.}
 \noindent Now, we will show how to derive the update rule for the image denoising problem.\ Recall that the Ising model
 for our problem is defined by the potential function
 $$
-H(e_i) = \prod\limits_{(j, k) \in K} e^{\beta e_i(v_j)e_i(v_k)}
-\prod\limits_{j \in V}( \mathbbm{1}_{e_i(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
-\mathbbm{1}_{e_i(v_j) \neq \tilde{Z}(v_j)}\alpha)
+H(e_i) = H(x) = \prod\limits_{(j, k) \in K} e^{\beta x(v_j)x(v_k)}
+\prod\limits_{j \in V}( \mathbbm{1}_{x(v_j) = \tilde{Z}(v_j)}(1 - \alpha) +
+\mathbbm{1}_{x(v_j) \neq \tilde{Z}(v_j)}\alpha)
 $$
 where each coordinate $(i, j)$ of an image corresponds to some vertex $v_k$, forming the graph $G = (E, K)$.\ This
 formula can be transformed to the more general form
